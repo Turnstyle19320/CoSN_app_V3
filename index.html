@@ -168,11 +168,15 @@
       localStorage.setItem('activeTab', tabName);
     }
 
-    // Restore last active tab on page load
-    window.addEventListener('DOMContentLoaded', () => {
+    // Initialize tab system - run this immediately, not on DOMContentLoaded
+    // since the content is already in the HTML
+    (function initTabs() {
       const lastTab = localStorage.getItem('activeTab') || 'assessment';
-      switchTab(lastTab);
-    });
+      if (lastTab !== 'assessment') {
+        // Only switch if it's not assessment (which is already active by default)
+        switchTab(lastTab);
+      }
+    })();
   </script>
 </body>
 </html>

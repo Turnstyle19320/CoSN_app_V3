@@ -723,6 +723,15 @@
   // ============================================
 
   function init() {
+    console.log('[App] Initializing...');
+
+    // Verify #app element exists
+    const appElement = document.getElementById('app');
+    if (!appElement) {
+      console.error('[App] #app element not found!');
+      return;
+    }
+
     loadSavedData();
 
     // Initialize SyncManager
@@ -745,7 +754,9 @@
       });
     }
 
+    console.log('[App] Calling render(), screen:', state.screen);
     render();
+    console.log('[App] Initialization complete');
   }
 
   // Start the app when DOM is ready

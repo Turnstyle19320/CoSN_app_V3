@@ -46,8 +46,14 @@
       height: 100%;
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(180deg, #f8fafc 0%, #ecfeff 35%, #f1f5f9 100%);
       color: #1e293b;
+    }
+    #content-assessment {
+      background: linear-gradient(180deg, #f8fafc 0%, #ecfeff 35%, #f1f5f9 100%);
+      min-height: calc(100vh - 64px);
+    }
+    #content-presentation {
+      background: #0f172a;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -69,17 +75,64 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    #beyond-iframe {
+      width: 100%;
+      height: calc(100vh - 64px);
+      border: none;
+    }
   </style>
 </head>
 <body>
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-  <!-- Main App Container -->
-  <div id="app" class="min-h-screen p-6"></div>
+  <!-- Tab Navigation -->
+  <div class="sticky top-0 z-50 bg-slate-900 shadow-lg">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center font-bold text-white">A</div>
+          <h1 class="text-xl font-bold text-white hidden md:block">CoSN K-12 Gen AI</h1>
+        </div>
+        <div class="flex space-x-2">
+          <button
+            id="tab-assessment"
+            onclick="switchTab('assessment')"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all bg-teal-600 text-white"
+          >
+            Assessment Tool
+          </button>
+          <button
+            id="tab-presentation"
+            onclick="switchTab('presentation')"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Beyond the Chatbot
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Session Dashboard Modal (hidden by default) -->
-  <div id="session-dashboard" class="hidden fixed inset-0 z-[120] flex items-start justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto"></div>
+  <!-- Assessment Tab Content -->
+  <div id="content-assessment" class="tab-content active">
+    <!-- Main App Container -->
+    <div id="app" class="min-h-screen p-6"></div>
+
+    <!-- Session Dashboard Modal (hidden by default) -->
+    <div id="session-dashboard" class="hidden fixed inset-0 z-[120] flex items-start justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto"></div>
+  </div>
+
+  <!-- Presentation Tab Content -->
+  <div id="content-presentation" class="tab-content">
+    <iframe id="beyond-iframe" src="beyond-the-chatbot.html"></iframe>
+  </div>
 
   <!-- Load PeerJS -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -88,5 +141,38 @@
   <script src="constants.js"></script>
   <script src="syncManager.js"></script>
   <script src="app.js"></script>
+
+  <!-- Tab Switching Logic -->
+  <script>
+    function switchTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('bg-teal-600', 'text-white');
+        button.classList.add('text-slate-300', 'hover:text-white', 'hover:bg-slate-800');
+      });
+
+      // Show selected tab content
+      document.getElementById('content-' + tabName).classList.add('active');
+
+      // Highlight active button
+      const activeButton = document.getElementById('tab-' + tabName);
+      activeButton.classList.add('bg-teal-600', 'text-white');
+      activeButton.classList.remove('text-slate-300', 'hover:text-white', 'hover:bg-slate-800');
+
+      // Save active tab to localStorage
+      localStorage.setItem('activeTab', tabName);
+    }
+
+    // Restore last active tab on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const lastTab = localStorage.getItem('activeTab') || 'assessment';
+      switchTab(lastTab);
+    });
+  </script>
 </body>
 </html>

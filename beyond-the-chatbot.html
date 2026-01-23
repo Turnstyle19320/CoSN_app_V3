@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyond the Chatbot: Strategic AI Readiness for K-12</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            background: #0f172a;
+        }
+
+        :root {
+            --teal: #00838f;
+            --teal-dark: #006064;
+            --teal-light: #e0f7fa;
+            --navy: #1a365d;
+            --navy-dark: #0f172a;
+        }
+
+        /* Smooth scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Sticky header */
+        .sticky-header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--teal), #00bcd4);
+            z-index: 1001;
+            transition: width 0.1s ease;
+        }
+
+        /* Quote cards */
+        .quote-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .quote-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 131, 143, 0.3);
+        }
+
+        /* Video responsive wrapper */
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            border-radius: 1rem;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Stat counter animation */
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .stat-number {
+            animation: countUp 0.8s ease-out;
+        }
+
+        /* Parallax effect */
+        .parallax {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--teal);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            background: var(--teal-dark);
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Sticky Header -->
+<header class="sticky-header">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="font-bold text-xl text-white">Beyond the Chatbot</div>
+        <nav class="hidden md:flex space-x-6 text-sm">
+            <a href="#wave" class="text-gray-300 hover:text-white transition">The Wave</a>
+            <a href="#choice" class="text-gray-300 hover:text-white transition">The Choice</a>
+            <a href="#framework" class="text-gray-300 hover:text-white transition">Framework</a>
+            <a href="#action" class="text-gray-300 hover:text-white transition">Action</a>
+        </nav>
+    </div>
+</header>
+
+<!-- SECTION 1: HERO -->
+<section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-teal-900 opacity-90"></div>
+    <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000'); background-size: cover; background-position: center; opacity: 0.2;"></div>
+    
+    <div class="relative z-10 text-center px-6 max-w-5xl mx-auto fade-in">
+        <div class="inline-block px-6 py-2 bg-teal-500/20 backdrop-blur-sm border border-teal-400/30 rounded-full text-teal-300 text-xs font-bold uppercase tracking-widest mb-8">
+            District Cabinet Summit • January 2026
+        </div>
+        <h1 class="text-6xl md:text-8xl font-black text-white leading-none mb-6">
+            Beyond the <span class="text-teal-400">Chatbot</span>
+        </h1>
+        <p class="text-2xl md:text-3xl text-gray-300 font-light mb-8">
+            Strategic AI Readiness & Intentional Design
+        </p>
+        <div class="h-1 w-32 bg-teal-400 rounded-full mx-auto mb-12"></div>
+        <p class="text-xl md:text-2xl italic text-gray-400 font-medium mb-16">
+            "The leaders have spoken. The numbers are in. Are we ready?"
+        </p>
+        <div class="flex flex-col items-center">
+            <svg class="w-8 h-8 text-teal-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+            <span class="text-xs text-gray-500 mt-2 uppercase tracking-widest">Scroll to explore</span>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 2: THE DAVOS CONSENSUS -->
+<section id="wave" class="min-h-screen bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <div class="flex justify-between items-end mb-12 border-b border-gray-200 pb-6">
+            <div>
+                <h2 class="text-5xl md:text-6xl font-black text-gray-900 uppercase tracking-tight mb-2">
+                    They All Agree
+                </h2>
+                <p class="text-xl text-gray-600">The global consensus on workforce disruption</p>
+            </div>
+            <span class="text-xs font-black text-teal-600 bg-teal-50 px-4 py-2 rounded-full uppercase tracking-widest">
+                January 2026
+            </span>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Quote 1 -->
+            <div class="quote-card bg-teal-50 border-2 border-teal-500 p-8 rounded-3xl shadow-lg">
+                <p class="text-lg font-bold text-gray-900 leading-snug mb-6">
+                    "I have engineers within Anthropic who say, I don't write any code anymore. I just let the model write the code. I edit it. I think we might be six to 12 months away from when the model is doing most, maybe all of what we do end to end."
+                </p>
+                <div class="pt-4 border-t border-teal-200">
+                    <p class="text-sm font-black text-gray-900 uppercase">Dario Amodei</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO Anthropic</p>
+                    <a href="https://www.weforum.org/meetings/world-economic-forum-annual-meeting-2026/sessions/the-day-after-agi/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        WEF Davos 2026 "Day After AGI" Panel ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 2 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "AI models proficient at coding and AI research are creating next-generation models, establishing an acceleration loop. It's a question of how fast does that loop close."
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Dario Amodei</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO Anthropic</p>
+                    <a href="https://www.weforum.org/meetings/world-economic-forum-annual-meeting-2026/sessions/the-day-after-agi/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        WEF Davos 2026 ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 3 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "Become unbelievably proficient with AI tools rather than seeking traditional internships."
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Demis Hassabis</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO Google DeepMind</p>
+                    <a href="https://www.weforum.org/meetings/world-economic-forum-annual-meeting-2026/sessions/the-day-after-agi/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        WEF Davos 2026 ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 4 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "50% of entry-level office jobs could disappear within the next one to five years."
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Dario Amodei</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO Anthropic</p>
+                    <a href="https://www.weforum.org/meetings/world-economic-forum-annual-meeting-2026/sessions/the-day-after-agi/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        WEF Davos 2026 ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 5 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "2026 will be a pivotal year for AI... distinguishing 'spectacle' from 'substance.'"
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Satya Nadella</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO Microsoft</p>
+                    <a href="https://www.linkedin.com/posts/satyanadella_looking-ahead-to-2026-activity-7411490079984250880-Vb5v" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        LinkedIn Post ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 6 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "It is our job to create computing technology such that nobody has to program... everyone is a programmer now."
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Jensen Huang</p>
+                    <p class="text-xs text-teal-700 font-bold">CEO NVIDIA</p>
+                    <a href="https://www.nvidia.com/en-us/events/ces/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        CES 2025 Keynote ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quote 7 -->
+            <div class="quote-card bg-white border border-gray-200 p-8 rounded-3xl shadow-md">
+                <p class="text-lg font-bold text-gray-700 leading-snug mb-6">
+                    "AI will be as good a tutor as any human ever could... within the next two years."
+                </p>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm font-black text-gray-900 uppercase">Bill Gates</p>
+                    <p class="text-xs text-teal-700 font-bold">Microsoft Co-Founder</p>
+                    <a href="https://www.gatesnotes.com/" target="_blank" class="text-xs text-teal-600 hover:underline mt-2 inline-flex items-center">
+                        Gates Notes ↗
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 3: THE NUMBERS -->
+<section class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-white uppercase mb-6">The Numbers</h2>
+        <p class="text-xl text-gray-400 mb-16 max-w-3xl">
+            This isn't speculation. The World Economic Forum's latest data shows the workforce is shifting in real-time as graduates enter a transformed economy.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Stat 1 -->
+            <div class="bg-gradient-to-br from-teal-600 to-teal-700 p-12 rounded-3xl shadow-2xl">
+                <div class="stat-number text-7xl md:text-8xl font-black text-white mb-4">170M</div>
+                <div class="text-sm uppercase font-bold text-teal-100 tracking-widest mb-4">
+                    Jobs Created by 2030
+                </div>
+                <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" class="text-xs text-teal-200 hover:text-white transition">
+                    Source: WEF Future of Jobs 2025 ↗
+                </a>
+            </div>
+
+            <!-- Stat 2 -->
+            <div class="bg-white border-4 border-teal-600 p-12 rounded-3xl shadow-xl">
+                <div class="stat-number text-7xl md:text-8xl font-black text-gray-900 mb-4">92M</div>
+                <div class="text-sm uppercase font-bold text-gray-600 tracking-widest mb-4">
+                    Jobs Displaced by 2030
+                </div>
+                <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" class="text-xs text-teal-600 hover:underline">
+                    Source: WEF Future of Jobs 2025 ↗
+                </a>
+            </div>
+
+            <!-- Stat 3 -->
+            <div class="bg-gradient-to-br from-red-500 to-red-600 p-12 rounded-3xl shadow-2xl">
+                <div class="stat-number text-7xl md:text-8xl font-black text-white mb-4">40%</div>
+                <div class="text-sm uppercase font-bold text-red-100 tracking-widest mb-4">
+                    Employers Planning AI-Driven Cuts
+                </div>
+                <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" class="text-xs text-red-200 hover:text-white transition">
+                    Source: WEF 2025 ↗
+                </a>
+            </div>
+
+            <!-- Stat 4 -->
+            <div class="bg-red-50 border-4 border-red-200 p-12 rounded-3xl shadow-xl">
+                <div class="stat-number text-7xl md:text-8xl font-black text-red-600 mb-4">-29%</div>
+                <div class="text-sm uppercase font-bold text-red-800 tracking-widest mb-4">
+                    Drop in Entry-Level Postings
+                </div>
+                <a href="https://www.weforum.org/stories/2025/04/ai-jobs-international-workers-day/" target="_blank" class="text-xs text-red-600 hover:underline">
+                    Source: Randstad via WEF ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-12 bg-red-900/20 border-l-4 border-red-500 p-6 rounded-lg">
+            <p class="text-lg font-bold text-red-300">
+                <strong>Critical Insight:</strong> Entry-level jobs are already disappearing. Our graduates are walking into this right now.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 4: THE PROFICIENCY GAP -->
+<section class="min-h-screen bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-gray-900 uppercase mb-6">The Proficiency Gap</h2>
+        <p class="text-xl text-gray-600 mb-12">
+            Everyone's experimenting, but almost no one is actually skilled.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-12 rounded-3xl shadow-2xl">
+                    <div class="text-center mb-8">
+                        <div class="text-8xl font-black text-red-500 mb-4">3%</div>
+                        <div class="text-xl font-bold text-gray-300 uppercase tracking-wider">
+                            AI Practitioners or Experts
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-purple-400">69%</div>
+                            <div class="text-gray-400">Experimenters</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-cyan-400">2.7%</div>
+                            <div class="text-gray-400">Practitioners</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-green-400">0.08%</div>
+                            <div class="text-gray-400">Experts</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-pink-400">28%</div>
+                            <div class="text-gray-400">Novices</div>
+                        </div>
+                    </div>
+                    <a href="https://www.sectionai.com/ai/the-ai-proficiency-report" target="_blank" class="block text-center text-xs text-teal-400 hover:text-teal-300 mt-8">
+                        Source: AI Proficiency Report Jan 2026 ↗
+                    </a>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-lg">
+                    <h3 class="font-black text-2xl text-gray-900 mb-3">The Reality</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        Less than 3% of the workforce are AI practitioners or experts — people who put AI to use in their workflows and see significant productivity gains.
+                    </p>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
+                    <h3 class="font-black text-2xl text-gray-900 mb-3">The Divide</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        Companies with strong AI foundations are <strong>3x more likely</strong> to report meaningful financial returns. The gap between pilots and production is enormous.
+                    </p>
+                    <a href="https://www.pwc.com" target="_blank" class="text-xs text-blue-600 hover:underline mt-2 inline-block">
+                        Source: PwC Analysis 2025 ↗
+                    </a>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
+                    <h3 class="font-black text-2xl text-gray-900 mb-3">The Perception Gap</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        CEOs claim AI saves <strong>8-12 hours/week</strong>. Workers say it saves <strong>less than 2 hours</strong>. That's a 38-point divergence.
+                    </p>
+                    <a href="https://www.wsj.com/lifestyle/workplace/ai-productivity-ceos-employees-56f07f8f" target="_blank" class="text-xs text-yellow-700 hover:underline mt-2 inline-block">
+                        Source: Wall Street Journal Jan 2026 ↗
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 5: K-12 REALITY CHECK -->
+<section class="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-900 py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-white uppercase mb-6">The K-12 Reality</h2>
+        <p class="text-xl text-gray-300 mb-16">
+            Our students aren't asking for permission. They're already using tools we don't understand.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 p-10 rounded-3xl text-center">
+                <div class="text-7xl font-black text-red-400 mb-4">88%</div>
+                <div class="text-lg font-bold text-white uppercase tracking-wide">
+                    Students Use AI for Homework
+                </div>
+                <a href="https://www.commonsensemedia.org/" target="_blank" class="text-xs text-gray-400 hover:text-white mt-4 inline-block">
+                    Source: Common Sense Media ↗
+                </a>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 p-10 rounded-3xl text-center">
+                <div class="text-7xl font-black text-yellow-400 mb-4">63%</div>
+                <div class="text-lg font-bold text-white uppercase tracking-wide">
+                    Teachers Use AI Without Guidance
+                </div>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 p-10 rounded-3xl text-center">
+                <div class="text-7xl font-black text-teal-400 mb-4">26%</div>
+                <div class="text-lg font-bold text-white uppercase tracking-wide">
+                    Districts Offered Training Last Year
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-red-500/20 border-l-4 border-red-500 p-8 rounded-lg">
+            <p class="text-xl font-bold text-white leading-relaxed">
+                70% of students use AI to "get answers." Only 12% use it to "deepen understanding." 
+                <br><br>
+                <span class="text-red-300">This is the equity gap in real-time.</span>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 6: THE FORK IN THE ROAD (PIVOT) -->
+<section id="choice" class="min-h-screen bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-6xl md:text-7xl font-black text-gray-900 uppercase mb-6 text-center">
+            The Fork in the Road
+        </h2>
+        <p class="text-2xl text-gray-600 text-center mb-16 max-w-3xl mx-auto">
+            We can't stop the wave. But we can choose how we ride it.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-12">
+            <!-- Left Path: Drift -->
+            <div class="bg-gradient-to-br from-gray-100 to-gray-200 p-12 rounded-3xl border-4 border-gray-300 opacity-75">
+                <div class="text-6xl mb-6">⚠️</div>
+                <h3 class="text-3xl font-black text-gray-800 mb-6 uppercase">Drift & React</h3>
+                <ul class="space-y-4 text-gray-700 text-lg">
+                    <li class="flex items-start">
+                        <span class="text-red-500 mr-3">✗</span>
+                        Ban AI tools without understanding them
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-500 mr-3">✗</span>
+                        Play whack-a-mole with detectors
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-500 mr-3">✗</span>
+                        Digitize old practices (transactional)
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-red-500 mr-3">✗</span>
+                        Let students figure it out alone
+                    </li>
+                </ul>
+                <div class="mt-8 pt-6 border-t border-gray-400">
+                    <p class="text-sm font-bold text-red-600 uppercase tracking-wide">
+                        Result: A faster version of an outdated system
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Path: Lead with Intention -->
+            <div class="bg-gradient-to-br from-teal-500 to-teal-600 p-12 rounded-3xl border-4 border-teal-700 shadow-2xl transform scale-105">
+                <div class="text-6xl mb-6">🚀</div>
+                <h3 class="text-3xl font-black text-white mb-6 uppercase">Lead with Intention</h3>
+                <ul class="space-y-4 text-white text-lg">
+                    <li class="flex items-start">
+                        <span class="text-green-300 mr-3 text-2xl">✓</span>
+                        Establish guardrails, not bans
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-300 mr-3 text-2xl">✓</span>
+                        Redesign assessment around cognitive demand
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-300 mr-3 text-2xl">✓</span>
+                        Transform pedagogy (transformational)
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-green-300 mr-3 text-2xl">✓</span>
+                        Teach students to think WITH AI, not FOR them
+                    </li>
+                </ul>
+                <div class="mt-8 pt-6 border-t border-teal-300">
+                    <p class="text-sm font-bold text-teal-100 uppercase tracking-wide">
+                        Result: Deep learning that was previously impossible
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-16 text-center">
+            <p class="text-3xl font-black text-gray-900 italic">
+                "We must move from 'Shadow AI' to 'Intentional AI'."
+            </p>
+            <p class="text-lg text-gray-600 mt-4">— Tony Frontier, AI with Intention</p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 7: AI WITH INTENTION FRAMEWORK -->
+<section id="framework" class="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <div class="text-center mb-16">
+            <div class="inline-block px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs font-bold uppercase tracking-widest mb-8">
+                The Framework
+            </div>
+            <h2 class="text-6xl md:text-7xl font-black text-white uppercase mb-6">
+                AI with Intention
+            </h2>
+            <p class="text-2xl text-gray-300 max-w-3xl mx-auto">
+                Tony Frontier's pedagogical compass for the AI era
+            </p>
+        </div>
+
+        <!-- Core Principle -->
+        <div class="bg-white p-16 rounded-3xl shadow-2xl mb-12">
+            <div class="text-center mb-12">
+                <div class="text-7xl font-black text-gray-900 mb-4">
+                    Fidelity <span class="text-teal-600">&gt;</span> Efficiency
+                </div>
+                <p class="text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                    "We must prioritize the <strong>fidelity</strong> of the learning process over the <strong>efficiency</strong> of the product."
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-red-50 border-l-4 border-red-500 p-8 rounded-lg">
+                    <div class="text-4xl mb-4">❌</div>
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">The Efficiency Trap</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        Using AI to quickly write lesson plans or grade essays without human review. It's faster, but disconnects the teacher from the student and bypasses the cognitive struggle that builds understanding.
+                    </p>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-500 p-8 rounded-lg">
+                    <div class="text-4xl mb-4">✅</div>
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">The Fidelity Focus</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        Using AI to create role-play scenarios that deepen critical thinking. It might take <em>more</em> time to design, but the learning is deeper and students develop genuine mastery.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <a href="https://www.ascd.org/el/articles/how-to-use-generative-ai-with-intention" target="_blank" class="text-sm text-teal-600 hover:underline font-bold">
+                    Source: Tony Frontier, ASCD Educational Leadership ↗
+                </a>
+            </div>
+        </div>
+
+        <!-- Transactional vs Transformational -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white/10 backdrop-blur-sm border border-white/20 p-10 rounded-3xl">
+                <div class="text-5xl mb-6">🔄</div>
+                <h3 class="text-3xl font-black text-gray-300 mb-4 uppercase">Transactional</h3>
+                <p class="text-gray-400 mb-6 text-lg">"Doing the same things, but with AI"</p>
+                <ul class="space-y-3 text-gray-300">
+                    <li>• "How do I use AI to write this email?"</li>
+                    <li>• "How do I use AI to create a quiz?"</li>
+                    <li>• Focus: Speed & Automation</li>
+                </ul>
+            </div>
+
+            <div class="bg-gradient-to-br from-teal-500 to-teal-600 p-10 rounded-3xl border-4 border-teal-400 shadow-2xl">
+                <div class="text-5xl mb-6">🚀</div>
+                <h3 class="text-3xl font-black text-white mb-4 uppercase">Transformational</h3>
+                <p class="text-teal-100 mb-6 text-lg">"Doing new things that were previously impossible"</p>
+                <ul class="space-y-3 text-white">
+                    <li>• "How can AI simulate a debate opponent for every student?"</li>
+                    <li>• "How can AI analyze our curriculum for bias?"</li>
+                    <li>• Focus: Depth & Insight</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <p class="text-2xl italic text-white font-light">
+                "If we only use AI for efficiency, we miss the revolution."
+            </p>
+            <p class="text-lg text-gray-400 mt-2">— Tony Frontier</p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 8: THE VIDEO (Embedded) -->
+<section class="min-h-screen bg-gray-900 py-20 px-6 flex items-center">
+    <div class="max-w-6xl mx-auto fade-in w-full">
+        <h2 class="text-5xl md:text-6xl font-black text-white uppercase mb-6 text-center">
+            Understanding the Transformation
+        </h2>
+        <p class="text-xl text-gray-400 mb-12 text-center max-w-3xl mx-auto">
+            Jensen Huang explains why coding is no longer the gateway skill it once was
+        </p>
+
+        <div class="video-wrapper shadow-2xl">
+            <iframe 
+                src="https://www.youtube.com/embed/9Zz2KrBDXUo" 
+                title="NVIDIA CEO Jensen Huang on AI and the Future of Programming" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-gray-500 text-sm">
+                NVIDIA CEO Jensen Huang at CES 2025 discusses how AI is democratizing technology creation
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 9: ACADEMIC INTEGRITY REFRAME -->
+<section class="min-h-screen bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-gray-900 uppercase mb-6">
+            Redefining "Cheating"
+        </h2>
+        <p class="text-xl text-gray-600 mb-16">
+            Stop playing whack-a-mole with detectors
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-12">
+            <!-- Old Lens -->
+            <div class="bg-gray-50 p-10 rounded-3xl border-2 border-gray-200">
+                <h3 class="text-3xl font-black text-red-600 mb-6">The Old Lens</h3>
+                <p class="text-xl text-gray-700 leading-relaxed mb-6">
+                    "Students are using AI to cheat on the essay. We need detection software and stricter bans."
+                </p>
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                    <p class="font-bold text-gray-900">The Problem with Detectors:</p>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li>• <strong>98% false positive rate</strong> for non-native English speakers</li>
+                        <li>• Already obsolete with new models</li>
+                        <li>• Creates adversarial student relationships</li>
+                    </ul>
+                    <a href="https://hai.stanford.edu/news/ai-detectors-biased-against-non-native-english-writers" target="_blank" class="text-xs text-red-600 hover:underline mt-4 inline-block">
+                        Source: Stanford HAI Study ↗
+                    </a>
+                </div>
+            </div>
+
+            <!-- New Lens -->
+            <div class="bg-gradient-to-br from-teal-500 to-teal-600 p-10 rounded-3xl shadow-2xl text-white">
+                <h3 class="text-3xl font-black mb-6">The Intention Lens</h3>
+                <p class="text-xl leading-relaxed mb-6">
+                    "If an AI can complete the assignment with high quality and zero human input, <strong>the assignment is no longer a valid measure of learning.</strong>"
+                </p>
+                <div class="bg-white/20 backdrop-blur-sm border-l-4 border-white p-6 rounded-lg">
+                    <p class="font-bold">The Frontier Reframe:</p>
+                    <ul class="mt-4 space-y-2">
+                        <li>• Assess the <strong>process</strong>, not just the product</li>
+                        <li>• Design tasks requiring human judgment</li>
+                        <li>• Use AI as thinking partner, not replacement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 bg-blue-50 border-l-4 border-blue-500 p-8 rounded-lg">
+            <p class="text-lg font-bold text-gray-900 mb-4">Example Redesign:</p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <div class="text-sm font-bold text-gray-600 uppercase mb-2">Old Assignment</div>
+                    <p class="text-gray-700">"Write a 5-paragraph essay on the causes of WWI"</p>
+                    <p class="text-xs text-red-600 mt-2">→ AI can do this in 30 seconds</p>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-600 uppercase mb-2">Redesigned Assignment</div>
+                    <p class="text-gray-700">"Use AI to generate 3 different historical perspectives on WWI. Identify the bias in each. Write your synthesis of what actually happened and why the narratives differ."</p>
+                    <p class="text-xs text-green-600 mt-2">→ AI is the tool, critical thinking is the skill</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 10: CoSN FRAMEWORK & ASSESSMENT -->
+<section id="action" class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-white uppercase mb-6">
+            Where We Stand
+        </h2>
+        <p class="text-xl text-gray-300 mb-16">
+            The CoSN K-12 Gen AI Maturity Framework helps districts assess readiness across 7 domains
+        </p>
+
+        <!-- Maturity Levels -->
+        <div class="grid md:grid-cols-3 gap-8 mb-16">
+            <div class="bg-red-500/20 border-4 border-red-500 p-10 rounded-3xl text-center">
+                <div class="text-6xl mb-4">🚨</div>
+                <h3 class="text-3xl font-black text-red-400 mb-4 uppercase">Emerging</h3>
+                <div class="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-xs font-bold uppercase mb-6">
+                    High Risk
+                </div>
+                <p class="text-gray-300 leading-relaxed">
+                    Ad-hoc usage, no policy, reactive approach. Data leaks, equity gaps, legal liability.
+                </p>
+            </div>
+
+            <div class="bg-yellow-500/20 border-4 border-yellow-500 p-10 rounded-3xl text-center">
+                <div class="text-6xl mb-4">⚠️</div>
+                <h3 class="text-3xl font-black text-yellow-400 mb-4 uppercase">Developing</h3>
+                <div class="inline-block bg-yellow-500 text-gray-900 px-4 py-2 rounded-full text-xs font-bold uppercase mb-6">
+                    Managed Risk
+                </div>
+                <p class="text-gray-300 leading-relaxed">
+                    Pilots underway, interim guidelines, some training. "Islands of excellence" without system coherence.
+                </p>
+            </div>
+
+            <div class="bg-teal-500/20 border-4 border-teal-500 p-10 rounded-3xl text-center">
+                <div class="text-6xl mb-4">✅</div>
+                <h3 class="text-3xl font-black text-teal-400 mb-4 uppercase">Mature</h3>
+                <div class="inline-block bg-teal-500 text-white px-4 py-2 rounded-full text-xs font-bold uppercase mb-6">
+                    Optimized
+                </div>
+                <p class="text-gray-300 leading-relaxed">
+                    Strategic integration, robust governance, transformational. Fidelity-focused, equitable, sustainable.
+                </p>
+            </div>
+        </div>
+
+        <!-- The 7 Domains -->
+        <div class="bg-white p-12 rounded-3xl shadow-2xl">
+            <h3 class="text-3xl font-black text-gray-900 mb-8 text-center">The 7 Assessment Domains</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">👨‍💼</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Executive Leadership</div>
+                        <div class="text-sm text-gray-600">Vision, strategy, policy</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">⚙️</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Operational Readiness</div>
+                        <div class="text-sm text-gray-600">Procurement, staffing, roles</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">📊</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Data Readiness</div>
+                        <div class="text-sm text-gray-600">Governance, quality, privacy</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">💻</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Technical Readiness</div>
+                        <div class="text-sm text-gray-600">Infrastructure, security, access</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">🔒</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Security Readiness</div>
+                        <div class="text-sm text-gray-600">Safeguards, training, protocols</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl">⚖️</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Legal/Risk Readiness</div>
+                        <div class="text-sm text-gray-600">Compliance, liability, policy</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 p-4 bg-teal-50 rounded-lg border-2 border-teal-500 md:col-span-2">
+                    <div class="text-3xl">📚</div>
+                    <div>
+                        <div class="font-bold text-gray-900">Academic AI Literacy</div>
+                        <div class="text-sm text-gray-600">Curriculum integration, teacher PD, student impact, ethics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <p class="text-red-400 text-xl font-bold mb-6">
+                Most districts are "Emerging". That's dangerous when 88% of students are already ahead.
+            </p>
+            <a href="https://www.cosn.org/" target="_blank" class="inline-block bg-teal-500 hover:bg-teal-600 text-white font-bold text-lg px-8 py-4 rounded-full transition shadow-lg">
+                Learn More About CoSN Framework →
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 11: USING THE FRAMEWORK -->
+<section class="min-h-screen bg-white py-20 px-6">
+    <div class="max-w-7xl mx-auto fade-in">
+        <h2 class="text-5xl md:text-6xl font-black text-gray-900 uppercase mb-6 text-center">
+            Using the Framework
+        </h2>
+        <p class="text-xl text-gray-600 mb-16 text-center max-w-3xl mx-auto">
+            The CoSN framework is flexible by design. Districts can assess themselves based on their organizational structure and priorities.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-12 mb-16">
+            <div class="bg-gradient-to-br from-teal-50 to-blue-50 p-10 rounded-3xl border-2 border-teal-200">
+                <h3 class="text-3xl font-black text-gray-900 mb-6">Who Assesses What?</h3>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Each domain should be assessed by the leaders who own that area of responsibility. This ensures accurate self-evaluation and accountability for improvement.
+                </p>
+                <div class="space-y-4 text-gray-700">
+                    <div class="flex items-start">
+                        <span class="text-teal-600 font-black mr-3">→</span>
+                        <div><strong>Technology leadership</strong> evaluates technical and security readiness</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-teal-600 font-black mr-3">→</span>
+                        <div><strong>Legal/HR/Business</strong> assess risk, policy, and operational domains</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-teal-600 font-black mr-3">→</span>
+                        <div><strong>Instructional leaders</strong> evaluate academic literacy and curriculum integration</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-teal-600 font-black mr-3">→</span>
+                        <div><strong>Executive leadership</strong> assesses vision, strategy, and governance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-10 rounded-3xl border-2 border-purple-200">
+                <h3 class="text-3xl font-black text-gray-900 mb-6">The Value of Honesty</h3>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Most districts will score "Emerging" in multiple domains. <strong>That's expected and okay.</strong>
+                </p>
+                <div class="bg-white/60 border-l-4 border-purple-500 p-6 rounded-lg">
+                    <p class="text-gray-800 leading-relaxed">
+                        The goal isn't to achieve "Mature" status immediately. The goal is to:<br><br>
+                        <strong>1.</strong> Know where you actually are<br>
+                        <strong>2.</strong> Identify your highest risks<br>
+                        <strong>3.</strong> Create a realistic path forward
+                    </p>
+                </div>
+                <p class="text-sm text-gray-600 mt-6 italic">
+                    "You can't improve what you don't measure. And you can't measure what you're not willing to honestly assess."
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 p-12 rounded-3xl text-white">
+            <h3 class="text-3xl font-black mb-6 text-center">After the Assessment</h3>
+            <p class="text-xl text-gray-300 text-center leading-relaxed max-w-3xl mx-auto">
+                Once you've identified your gaps, you can use AI to help synthesize your findings and create an actionable roadmap that's specific to your district's needs and resources.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 12: THE CLOSING -->
+<section class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-20 px-6 flex items-center">
+    <div class="max-w-5xl mx-auto fade-in w-full text-center">
+        <div class="mb-16">
+            <h2 class="text-5xl md:text-6xl font-black text-white uppercase mb-12">
+                The Choice
+            </h2>
+            
+            <div class="bg-white/10 backdrop-blur-sm border-2 border-white/20 p-12 rounded-3xl mb-12">
+                <p class="text-3xl md:text-4xl italic text-gray-200 font-light leading-relaxed mb-8">
+                    "We tend to overestimate the change that will occur in the next two years and underestimate the change that will occur in the next ten. Don't let yourself be lulled into inaction."
+                </p>
+                <p class="text-xl font-black text-teal-400">— Bill Gates</p>
+                <a href="https://www.geekwire.com/2026/bill-gates-says-theres-no-upper-limit-on-ai-citing-opportunity-and-risk/" target="_blank" class="text-sm text-gray-400 hover:text-teal-400 transition mt-4 inline-block">
+                    Source: GeekWire 2026 ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <p class="text-3xl font-bold text-gray-300">
+                The question isn't <span class="text-gray-500">"Will this happen to us?"</span>
+            </p>
+            <p class="text-5xl md:text-6xl font-black text-white leading-tight">
+                It's <span class="text-teal-400">"Will we lead,</span><br>
+                <span class="text-teal-400">or will we react?"</span>
+            </p>
+        </div>
+
+        <div class="mt-20 h-1 w-32 bg-teal-400 rounded-full mx-auto"></div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-950 py-16 px-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-3 gap-12 mb-12">
+            <div>
+                <h3 class="text-xl font-black text-white mb-4 uppercase">Resources</h3>
+                <ul class="space-y-3 text-gray-400">
+                    <li><a href="https://www.ascd.org/books/ai-with-intention" target="_blank" class="hover:text-teal-400 transition">📚 AI with Intention (Tony Frontier)</a></li>
+                    <li><a href="https://www.cosn.org/" target="_blank" class="hover:text-teal-400 transition">🎯 CoSN Framework</a></li>
+                    <li><a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" class="hover:text-teal-400 transition">📊 WEF Future of Jobs 2025</a></li>
+                    <li><a href="https://www.sectionai.com/ai/the-ai-proficiency-report" target="_blank" class="hover:text-teal-400 transition">📈 AI Proficiency Report</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-black text-white mb-4 uppercase">Key Sources</h3>
+                <ul class="space-y-3 text-gray-400 text-sm">
+                    <li>World Economic Forum (WEF)</li>
+                    <li>Stanford Human-Centered AI (HAI)</li>
+                    <li>ASCD Educational Leadership</li>
+                    <li>Common Sense Media</li>
+                    <li>PwC Global Analysis</li>
+                    <li>Wall Street Journal</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-black text-white mb-4 uppercase">About</h3>
+                <p class="text-gray-400 leading-relaxed">
+                    This presentation synthesizes the latest research and industry insights to help K-12 leadership teams navigate the AI transformation with intentionality and fidelity to learning outcomes.
+                </p>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+            <p>© 2026 District Leadership Strategy • Data current as of January 2026</p>
+            <p class="mt-2">Built with data from WEF, Stanford HAI, ASCD, and Tony Frontier's "AI with Intention"</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top Button -->
+<div class="back-to-top" id="backToTop" onclick="scrollToTop()">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+</div>
+
+<script>
+    // Progress bar
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        document.getElementById("progressBar").style.width = scrolled + "%";
+
+        // Back to top button
+        const backToTop = document.getElementById("backToTop");
+        if (winScroll > 500) {
+            backToTop.classList.add("visible");
+        } else {
+            backToTop.classList.remove("visible");
+        }
+    });
+
+    // Scroll to top function
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Fade-in animation on scroll
+    const fadeElems = document.querySelectorAll('.fade-in');
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    fadeElems.forEach(el => fadeObserver.observe(el));
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

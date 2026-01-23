@@ -102,36 +102,36 @@
         </div>
         <div class="flex space-x-2">
           <button
-            id="tab-assessment"
-            onclick="switchTab('assessment')"
-            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all bg-teal-600 text-white"
-          >
-            Assessment Tool
-          </button>
-          <button
             id="tab-presentation"
             onclick="switchTab('presentation')"
-            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all bg-teal-600 text-white"
           >
             Beyond the Chatbot
+          </button>
+          <button
+            id="tab-assessment"
+            onclick="switchTab('assessment')"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Assessment Tool
           </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Presentation Tab Content -->
+  <div id="content-presentation" class="tab-content active">
+    <iframe id="beyond-iframe" src="beyond-the-chatbot.html"></iframe>
+  </div>
+
   <!-- Assessment Tab Content -->
-  <div id="content-assessment" class="tab-content active">
+  <div id="content-assessment" class="tab-content">
     <!-- Main App Container -->
     <div id="app" class="min-h-screen p-6"></div>
 
     <!-- Session Dashboard Modal (hidden by default) -->
     <div id="session-dashboard" class="hidden fixed inset-0 z-[120] flex items-start justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto"></div>
-  </div>
-
-  <!-- Presentation Tab Content -->
-  <div id="content-presentation" class="tab-content">
-    <iframe id="beyond-iframe" src="beyond-the-chatbot.html"></iframe>
   </div>
 
   <!-- Load PeerJS -->
@@ -171,9 +171,9 @@
     // Initialize tab system - run this immediately, not on DOMContentLoaded
     // since the content is already in the HTML
     (function initTabs() {
-      const lastTab = localStorage.getItem('activeTab') || 'assessment';
-      if (lastTab !== 'assessment') {
-        // Only switch if it's not assessment (which is already active by default)
+      const lastTab = localStorage.getItem('activeTab') || 'presentation';
+      if (lastTab !== 'presentation') {
+        // Only switch if it's not presentation (which is already active by default)
         switchTab(lastTab);
       }
     })();

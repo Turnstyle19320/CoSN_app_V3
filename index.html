@@ -81,10 +81,13 @@
     .tab-content.active {
       display: block;
     }
-    #beyond-iframe {
+    #beyond-iframe, #roadmap-iframe {
       width: 100%;
       height: calc(100vh - 64px);
       border: none;
+    }
+    #content-roadmap {
+      background: #667eea;
     }
   </style>
 </head>
@@ -109,6 +112,13 @@
             Beyond the Chatbot
           </button>
           <button
+            id="tab-roadmap"
+            onclick="switchTab('roadmap')"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Strategic Roadmap
+          </button>
+          <button
             id="tab-assessment"
             onclick="switchTab('assessment')"
             class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800"
@@ -123,6 +133,11 @@
   <!-- Presentation Tab Content -->
   <div id="content-presentation" class="tab-content active">
     <iframe id="beyond-iframe" src="beyond-the-chatbot.html"></iframe>
+  </div>
+
+  <!-- Strategic Roadmap Tab Content -->
+  <div id="content-roadmap" class="tab-content">
+    <iframe id="roadmap-iframe" src="roadmap-placeholder.html"></iframe>
   </div>
 
   <!-- Assessment Tab Content -->

@@ -1,5 +1,5 @@
 // Vanilla JS SyncManager - manages PeerJS connections and data sync
-const SyncManager = (function() {
+window.SyncManager = (function() {
   let peer = null;
   let connections = [];
   let mode = 'idle'; // 'idle', 'host', 'client'

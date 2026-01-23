@@ -540,15 +540,9 @@
       `;
     }
 
-    // Re-initialize SyncManager after render
-    if (window.SyncManager) {
-      window.SyncManager.init(
-        state.answers,
-        handleRemoteData,
-        addToast,
-        handleSessionUpdate,
-        handleOpenDashboard
-      );
+    // Re-render SyncManager after main render
+    if (window.SyncManager && window.SyncManager._render) {
+      window.SyncManager._render();
     }
   }
 
@@ -730,6 +724,27 @@
 
   function init() {
     loadSavedData();
+
+    // Initialize SyncManager
+    if (window.SyncManager) {
+      window.SyncManager.init('sync-manager-container', {
+        onDataReceived: handleRemoteData,
+        onSessionUpdate: handleSessionUpdate,
+        addToast: addToast,
+        onOpenDashboard: handleOpenDashboard
+      });
+
+      // Set current data
+      window.SyncManager.setCurrentData(state.answers);
+
+      // Listen for local updates to broadcast
+      window.addEventListener('assessment-update', (e) => {
+        if (window.SyncManager) {
+          window.SyncManager.sendUpdate(e.detail);
+        }
+      });
+    }
+
     render();
   }
 

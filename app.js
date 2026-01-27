@@ -587,6 +587,13 @@
             ${state.readOnly ? '<p class="text-[10px] text-amber-400 font-bold mt-1 uppercase">Read-Only Mode</p>' : ''}
           </div>
         ` : ''}
+        ${(!state.sessionState || state.sessionState.mode === 'idle') && (state.screen === 'questions' || state.screen === 'results') ? `
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 space-y-2">
+            <p class="text-xs font-black text-amber-700 uppercase tracking-widest">Preview Mode</p>
+            <p class="text-xs text-amber-600">You are not connected to a collaborative session. Selections are saved to this device only.</p>
+            <p class="text-xs text-amber-600">To share responses with your team, use the <strong>Collaboration Hub</strong> to enter a join code.</p>
+          </div>
+        ` : ''}
         ${isQuestionsScreen ? `
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Progress Track</h4>
@@ -811,16 +818,8 @@
 
       // Auto-create a local session so data persists
       if (!state.activeSessionId && window.adminPanel) {
-        const label = dept.members
-          ? dept.name + ' — ' + dept.members
-          : dept.name;
-        const session = window.adminPanel.createNewSession(label);
+        const session = window.adminPanel.createNewSession('Local Device Session');
         state.activeSessionId = session.id;
-      }
-
-      // Warn if not connected to a collab session
-      if (!state.sessionState || state.sessionState.mode === 'idle') {
-        addToast('You are not in a collaborative session. Your selections will be saved locally only. Use the Collaboration Hub to enter a join code.', 'info');
       }
 
       updateVisibleDomains();

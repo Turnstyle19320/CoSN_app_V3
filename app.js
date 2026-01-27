@@ -178,10 +178,8 @@
       detail: state.answers
     }));
 
-    // Targeted patch instead of full re-render
-    if (!patchAnswers(new Set([subdomainId]))) {
-      render();
-    }
+    // Targeted patch — only update the changed card, never full re-render
+    patchAnswers(new Set([subdomainId]));
   }
 
   function handleNoteUpdate(subdomainId, value) {
@@ -217,19 +215,20 @@
       const changedIds = new Set();
       for (const key of Object.keys(remoteData)) {
         if (state.answers[key] !== remoteData[key]) {
-          // Strip 'notes:' prefix to get the subdomain ID
           changedIds.add(key.startsWith('notes:') ? key.slice(6) : key);
         }
       }
+
+      if (changedIds.size === 0) return; // Nothing actually changed
 
       state.answers = { ...state.answers, ...remoteData };
       state.lastUpdatedAt = new Date();
       saveData();
 
-      // Only patch changed cards if on questions screen; otherwise full render
-      if (changedIds.size === 0 || !patchAnswers(changedIds)) {
-        render();
-      }
+      // Patch only the visible cards that changed — no full re-render.
+      // If the changed subdomains aren't on the current screen/domain,
+      // that's fine — state.answers is updated and will render when navigated to.
+      patchAnswers(changedIds);
     } catch (err) {
       console.error('[App] Error processing remote data:', err);
     }

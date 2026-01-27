@@ -13,20 +13,37 @@ window.SyncManager = (function() {
   let onSessionUpdate = null;
   let addToast = null;
 
+  // --- Reconnection state ---
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  let reconnectTimer = null;
+  let lastSessionMode = null;
+  let lastSessionCode = null;
+
+  // --- Heartbeat state ---
+  let heartbeatInterval = null;
+  const HEARTBEAT_INTERVAL_MS = 5000;
+  const HEARTBEAT_TIMEOUT_MS = 12000;
+  let peerLastSeen = new Map(); // conn -> timestamp
+
+  // --- Pending update queue ---
+  let pendingUpdates = [];
+
   function generateCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
+  // --- Session persistence (localStorage for durability across crashes) ---
   function saveSession(sessionMode, code) {
-    sessionStorage.setItem('cosn_sync_session', JSON.stringify({ mode: sessionMode, code }));
+    localStorage.setItem('cosn_sync_session', JSON.stringify({ mode: sessionMode, code }));
   }
 
   function clearSession() {
-    sessionStorage.removeItem('cosn_sync_session');
+    localStorage.removeItem('cosn_sync_session');
   }
 
   function getSavedSession() {
-    const saved = sessionStorage.getItem('cosn_sync_session');
+    const saved = localStorage.getItem('cosn_sync_session');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -35,6 +52,15 @@ window.SyncManager = (function() {
       }
     }
     return null;
+  }
+
+  // --- Migrate old sessionStorage key to localStorage (one-time) ---
+  function migrateSessionStorage() {
+    const old = sessionStorage.getItem('cosn_sync_session');
+    if (old) {
+      localStorage.setItem('cosn_sync_session', old);
+      sessionStorage.removeItem('cosn_sync_session');
+    }
   }
 
   function safeDestroyPeer() {
@@ -46,14 +72,132 @@ window.SyncManager = (function() {
     peer = null;
   }
 
+  // --- Message validation ---
+  function isValidPayload(data) {
+    if (!data || typeof data !== 'object') return false;
+    if (typeof data.type !== 'string') return false;
+    if (!['UPDATE', 'FULL_SYNC', 'HEARTBEAT', 'HEARTBEAT_ACK'].includes(data.type)) return false;
+    if (data.type === 'HEARTBEAT' || data.type === 'HEARTBEAT_ACK') return true;
+    if (data.payload === undefined || data.payload === null) return false;
+    if (typeof data.payload !== 'object') return false;
+    return true;
+  }
+
+  function safeSend(conn, message) {
+    try {
+      if (conn && conn.open) {
+        conn.send(message);
+        return true;
+      }
+    } catch (err) {
+      console.warn('[SyncManager] safeSend failed:', err);
+    }
+    return false;
+  }
+
   function broadcast(payload, excludeConn) {
     console.log('[SyncManager] Broadcasting to', connections.length, 'connections');
     connections.forEach(conn => {
-      if (conn !== excludeConn && conn.open) {
-        console.log('[SyncManager] Sending UPDATE to connection');
-        conn.send({ type: 'UPDATE', payload });
+      if (conn !== excludeConn) {
+        safeSend(conn, { type: 'UPDATE', payload });
       }
     });
+  }
+
+  // --- Pending update queue: flush when connected ---
+  function flushPendingUpdates() {
+    if (mode === 'idle' || connections.length === 0) return;
+    while (pendingUpdates.length > 0) {
+      const data = pendingUpdates.shift();
+      console.log('[SyncManager] Flushing queued update');
+      broadcast(data);
+    }
+  }
+
+  // --- Heartbeat ---
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatInterval = setInterval(() => {
+      const now = Date.now();
+      connections.forEach(conn => {
+        safeSend(conn, { type: 'HEARTBEAT' });
+      });
+
+      // Check for dead connections (host side only)
+      if (mode === 'host') {
+        const deadConns = [];
+        connections.forEach(conn => {
+          const lastSeen = peerLastSeen.get(conn) || 0;
+          if (lastSeen > 0 && (now - lastSeen) > HEARTBEAT_TIMEOUT_MS) {
+            deadConns.push(conn);
+          }
+        });
+        deadConns.forEach(conn => {
+          console.warn('[SyncManager] Removing dead connection (no heartbeat)');
+          try { conn.close(); } catch(e) { /* ignore */ }
+          connections = connections.filter(c => c !== conn);
+          peerLastSeen.delete(conn);
+        });
+        if (deadConns.length > 0) {
+          if (addToast) addToast(`${deadConns.length} peer(s) timed out.`, 'info');
+          notifySessionUpdate();
+        }
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
+    peerLastSeen.clear();
+  }
+
+  function handleHeartbeatMessage(conn, data) {
+    if (data.type === 'HEARTBEAT') {
+      safeSend(conn, { type: 'HEARTBEAT_ACK' });
+      peerLastSeen.set(conn, Date.now());
+      return true;
+    }
+    if (data.type === 'HEARTBEAT_ACK') {
+      peerLastSeen.set(conn, Date.now());
+      return true;
+    }
+    return false;
+  }
+
+  // --- Reconnection with exponential backoff ---
+  function scheduleReconnect() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.warn('[SyncManager] Max reconnect attempts reached');
+      if (addToast) addToast('Could not reconnect after multiple attempts. Please rejoin manually.', 'error');
+      hasError = true;
+      isConnecting = false;
+      notifySessionUpdate();
+      return;
+    }
+
+    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 15000);
+    reconnectAttempts++;
+    console.log(`[SyncManager] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+    if (addToast) addToast(`Reconnecting... (attempt ${reconnectAttempts})`, 'info');
+
+    reconnectTimer = setTimeout(() => {
+      if (lastSessionMode === 'host' && lastSessionCode) {
+        startHostWithCode(lastSessionCode);
+      } else if (lastSessionMode === 'client' && lastSessionCode) {
+        joinRoom(lastSessionCode);
+      }
+    }, delay);
+  }
+
+  function cancelReconnect() {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    reconnectAttempts = 0;
   }
 
   function notifySessionUpdate() {
@@ -67,12 +211,47 @@ window.SyncManager = (function() {
     }
   }
 
+  // --- Wire up connection data handlers with validation ---
+  function setupConnDataHandler(conn, isHost) {
+    peerLastSeen.set(conn, Date.now());
+
+    conn.on('data', (data) => {
+      try {
+        // Handle heartbeat messages first
+        if (handleHeartbeatMessage(conn, data)) return;
+
+        // Validate message
+        if (!isValidPayload(data)) {
+          console.warn('[SyncManager] Ignoring invalid message:', data);
+          return;
+        }
+
+        if (isHost) {
+          console.log('[SyncManager HOST] Received data:', data.type);
+          if (data.type === 'UPDATE' && onDataReceived) {
+            console.log('[SyncManager HOST] Calling onDataReceived with payload');
+            onDataReceived(data.payload);
+            broadcast(data.payload, conn);
+          }
+        } else {
+          if ((data.type === 'FULL_SYNC' || data.type === 'UPDATE') && onDataReceived) {
+            onDataReceived(data.payload);
+          }
+        }
+      } catch (err) {
+        console.error('[SyncManager] Error handling message:', err);
+      }
+    });
+  }
+
   function startHostWithCode(code) {
     connections = [];
     roomCode = code;
     mode = 'host';
     isConnecting = true;
     hasError = false;
+    lastSessionMode = 'host';
+    lastSessionCode = code;
     safeDestroyPeer();
     notifySessionUpdate();
 
@@ -93,8 +272,8 @@ window.SyncManager = (function() {
       if (!connected && peer) {
         isConnecting = false;
         hasError = true;
-        clearSession();
-        if (addToast) addToast('Reconnection timed out.', 'error');
+        // Don't clear session — let reconnect try again
+        scheduleReconnect();
         notifySessionUpdate();
       }
     }, 15000);
@@ -104,7 +283,10 @@ window.SyncManager = (function() {
       clearTimeout(connectionTimeout);
       mode = 'host';
       isConnecting = false;
+      reconnectAttempts = 0; // Reset on success
       saveSession('host', code);
+      startHeartbeat();
+      flushPendingUpdates();
       if (addToast) addToast(`Session restored: ${code}`, 'success');
       notifySessionUpdate();
     });
@@ -114,20 +296,24 @@ window.SyncManager = (function() {
       if (addToast) addToast('A contributor joined your session.', 'info');
       notifySessionUpdate();
 
-      conn.on('data', (data) => {
-        if (data.type === 'UPDATE' && onDataReceived) {
-          onDataReceived(data.payload);
-          broadcast(data.payload, conn);
-        }
-      });
+      setupConnDataHandler(conn, true);
 
       conn.on('open', () => {
-        conn.send({ type: 'FULL_SYNC', payload: currentData });
+        safeSend(conn, { type: 'FULL_SYNC', payload: currentData });
+        flushPendingUpdates();
       });
 
       conn.on('close', () => {
         connections = connections.filter(c => c !== conn);
+        peerLastSeen.delete(conn);
         if (addToast) addToast('A peer disconnected.', 'info');
+        notifySessionUpdate();
+      });
+
+      conn.on('error', (err) => {
+        console.warn('[SyncManager] Host-side connection error:', err);
+        connections = connections.filter(c => c !== conn);
+        peerLastSeen.delete(conn);
         notifySessionUpdate();
       });
     });
@@ -135,17 +321,38 @@ window.SyncManager = (function() {
     peer.on('error', (err) => {
       clearTimeout(connectionTimeout);
       console.error('Peer Error:', err);
-      clearSession();
       if (err.type === 'unavailable-id') {
+        clearSession();
+        cancelReconnect();
         if (addToast) addToast('Session code conflict. Please host a new session.', 'error');
+        isConnecting = false;
+        hasError = true;
+        mode = 'idle';
+        roomCode = '';
+        stopHeartbeat();
+        notifySessionUpdate();
       } else {
-        if (addToast) addToast('Could not restore session.', 'error');
+        // Temporary error — try to reconnect
+        isConnecting = false;
+        hasError = true;
+        stopHeartbeat();
+        notifySessionUpdate();
+        scheduleReconnect();
       }
-      isConnecting = false;
-      hasError = true;
-      mode = 'idle';
-      roomCode = '';
-      notifySessionUpdate();
+    });
+
+    peer.on('disconnected', () => {
+      console.warn('[SyncManager] Peer disconnected from signaling server');
+      // PeerJS lost connection to its signaling server but peer ID may still be reserved
+      // Try to reconnect the peer object first
+      if (peer && !peer.destroyed) {
+        try {
+          peer.reconnect();
+        } catch (err) {
+          console.warn('[SyncManager] peer.reconnect() failed:', err);
+          scheduleReconnect();
+        }
+      }
     });
   }
 
@@ -157,6 +364,8 @@ window.SyncManager = (function() {
     mode = 'host';
     isConnecting = true;
     hasError = false;
+    lastSessionMode = 'host';
+    lastSessionCode = code;
     if (addToast) addToast('Starting host session...', 'info');
     safeDestroyPeer();
     notifySessionUpdate();
@@ -178,8 +387,8 @@ window.SyncManager = (function() {
         console.warn('PeerJS connection timeout');
         isConnecting = false;
         hasError = true;
-        if (addToast) addToast('Connection timed out. The sync server may be unavailable.', 'error');
         notifySessionUpdate();
+        scheduleReconnect();
       }
     }, 15000);
 
@@ -188,7 +397,9 @@ window.SyncManager = (function() {
       clearTimeout(connectionTimeout);
       mode = 'host';
       isConnecting = false;
+      reconnectAttempts = 0;
       saveSession('host', code);
+      startHeartbeat();
       if (addToast) addToast(`Host session started: ${code}`, 'success');
       notifySessionUpdate();
     });
@@ -198,22 +409,23 @@ window.SyncManager = (function() {
       if (addToast) addToast('A contributor joined your session.', 'info');
       notifySessionUpdate();
 
-      conn.on('data', (data) => {
-        console.log('[SyncManager HOST] Received data:', data.type);
-        if (data.type === 'UPDATE' && onDataReceived) {
-          console.log('[SyncManager HOST] Calling onDataReceived with payload');
-          onDataReceived(data.payload);
-          broadcast(data.payload, conn);
-        }
-      });
+      setupConnDataHandler(conn, true);
 
       conn.on('open', () => {
-        conn.send({ type: 'FULL_SYNC', payload: currentData });
+        safeSend(conn, { type: 'FULL_SYNC', payload: currentData });
       });
 
       conn.on('close', () => {
         connections = connections.filter(c => c !== conn);
+        peerLastSeen.delete(conn);
         if (addToast) addToast('A peer disconnected.', 'info');
+        notifySessionUpdate();
+      });
+
+      conn.on('error', (err) => {
+        console.warn('[SyncManager] Host-side connection error:', err);
+        connections = connections.filter(c => c !== conn);
+        peerLastSeen.delete(conn);
         notifySessionUpdate();
       });
     });
@@ -222,13 +434,34 @@ window.SyncManager = (function() {
       clearTimeout(connectionTimeout);
       console.error('Peer Error:', err);
       if (err.type === 'unavailable-id') {
+        clearSession();
+        cancelReconnect();
         if (addToast) addToast('Connection conflict. Try hosting again.', 'error');
+        isConnecting = false;
+        hasError = true;
+        mode = 'idle';
+        roomCode = '';
+        stopHeartbeat();
       } else {
-        if (addToast) addToast('Sync service error.', 'error');
+        isConnecting = false;
+        hasError = true;
+        stopHeartbeat();
+        scheduleReconnect();
+        if (addToast) addToast('Sync service error. Reconnecting...', 'error');
       }
-      isConnecting = false;
-      hasError = true;
       notifySessionUpdate();
+    });
+
+    peer.on('disconnected', () => {
+      console.warn('[SyncManager] Peer disconnected from signaling server');
+      if (peer && !peer.destroyed) {
+        try {
+          peer.reconnect();
+        } catch (err) {
+          console.warn('[SyncManager] peer.reconnect() failed:', err);
+          scheduleReconnect();
+        }
+      }
     });
   }
 
@@ -241,6 +474,8 @@ window.SyncManager = (function() {
     safeDestroyPeer();
     hasError = false;
     isConnecting = true;
+    lastSessionMode = 'client';
+    lastSessionCode = targetCode;
     notifySessionUpdate();
 
     peer = new Peer();
@@ -253,41 +488,75 @@ window.SyncManager = (function() {
         mode = 'client';
         roomCode = targetCode;
         isConnecting = false;
+        reconnectAttempts = 0;
         saveSession('client', targetCode);
+        startHeartbeat();
+        flushPendingUpdates();
         if (addToast) addToast(`Successfully joined session: ${targetCode}`, 'success');
         notifySessionUpdate();
       });
 
-      conn.on('data', (data) => {
-        if ((data.type === 'FULL_SYNC' || data.type === 'UPDATE') && onDataReceived) {
-          onDataReceived(data.payload);
+      setupConnDataHandler(conn, false);
+
+      conn.on('close', () => {
+        console.warn('[SyncManager] Connection to host closed');
+        stopHeartbeat();
+        connections = [];
+        // Don't immediately kill session — try to reconnect
+        if (!hasError) {
+          isConnecting = true;
+          notifySessionUpdate();
+          scheduleReconnect();
         }
       });
 
-      conn.on('close', () => {
-        if (addToast) addToast('Host ended the session.', 'info');
-        stopSync();
-      });
-
-      conn.on('error', () => {
-        if (addToast) addToast('Connection failed.', 'error');
-        stopSync();
+      conn.on('error', (err) => {
+        console.error('[SyncManager] Client connection error:', err);
+        stopHeartbeat();
+        connections = [];
+        isConnecting = true;
+        hasError = false;
+        notifySessionUpdate();
+        scheduleReconnect();
       });
     });
 
-    peer.on('error', () => {
-      if (addToast) addToast('Could not find District Code.', 'error');
-      stopSync();
+    peer.on('error', (err) => {
+      console.error('[SyncManager] Client peer error:', err);
+      stopHeartbeat();
+      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        scheduleReconnect();
+      } else {
+        if (addToast) addToast('Could not find District Code.', 'error');
+        stopSync();
+      }
+    });
+
+    peer.on('disconnected', () => {
+      console.warn('[SyncManager] Client peer disconnected from signaling');
+      if (peer && !peer.destroyed) {
+        try {
+          peer.reconnect();
+        } catch (err) {
+          console.warn('[SyncManager] client peer.reconnect() failed:', err);
+          scheduleReconnect();
+        }
+      }
     });
   }
 
   function stopSync() {
+    cancelReconnect();
+    stopHeartbeat();
     safeDestroyPeer();
     connections = [];
     mode = 'idle';
     roomCode = '';
     isConnecting = false;
     hasError = false;
+    lastSessionMode = null;
+    lastSessionCode = null;
+    pendingUpdates = [];
     clearSession();
     notifySessionUpdate();
   }
@@ -295,9 +564,15 @@ window.SyncManager = (function() {
   function sendUpdate(data) {
     console.log('[SyncManager] Local update, mode:', mode, 'connections:', connections.length);
     currentData = data;
-    if (mode !== 'idle' && connections.length > 0) {
-      console.log('[SyncManager] Broadcasting local update');
-      broadcast(data);
+    if (mode !== 'idle') {
+      if (connections.length > 0) {
+        console.log('[SyncManager] Broadcasting local update');
+        broadcast(data);
+      } else {
+        // Queue the update for when connection is (re)established
+        console.log('[SyncManager] No connections, queuing update');
+        pendingUpdates.push(data);
+      }
     }
   }
 
@@ -452,6 +727,9 @@ window.SyncManager = (function() {
         addToast = callbacks.addToast;
         onDashboardOpen = callbacks.onOpenDashboard;
       }
+
+      // Migrate old sessionStorage key if present
+      migrateSessionStorage();
 
       // Auto-reconnect to saved session
       const saved = getSavedSession();

@@ -129,11 +129,30 @@
     render();
   }
 
-  function handleRemoteData(remoteData) {
-    state.answers = { ...state.answers, ...remoteData };
-    state.lastUpdatedAt = new Date();
+  function handleNoteUpdate(subdomainId, value) {
+    const noteKey = 'notes:' + subdomainId;
+    state.answers[noteKey] = value.slice(0, 300);
     saveData();
-    render();
+
+    // Sync notes with peers
+    window.dispatchEvent(new CustomEvent('assessment-update', {
+      detail: state.answers
+    }));
+  }
+
+  function handleRemoteData(remoteData) {
+    try {
+      if (!remoteData || typeof remoteData !== 'object') {
+        console.warn('[App] Ignoring invalid remote data:', remoteData);
+        return;
+      }
+      state.answers = { ...state.answers, ...remoteData };
+      state.lastUpdatedAt = new Date();
+      saveData();
+      render();
+    } catch (err) {
+      console.error('[App] Error processing remote data:', err);
+    }
   }
 
   function handleSessionUpdate(session) {
@@ -162,13 +181,14 @@
           subdomainId: sub.id,
           subdomainTitle: sub.title,
           level: state.answers[sub.id] || 'Not Started',
+          notes: state.answers['notes:' + sub.id] || '',
         }))
       )
     );
 
-    const csvHeader = 'Domain ID,Domain,Section ID,Section,Subdomain ID,Subdomain,Level\n';
+    const csvHeader = 'Domain ID,Domain,Section ID,Section,Subdomain ID,Subdomain,Level,Notes\n';
     const csvRows = rows
-      .map((r) => `"${r.domainId}","${r.domainTitle}","${r.sectionId}","${r.sectionTitle}","${r.subdomainId}","${r.subdomainTitle}","${r.level}"`)
+      .map((r) => `"${r.domainId}","${r.domainTitle}","${r.sectionId}","${r.sectionTitle}","${r.subdomainId}","${r.subdomainTitle}","${r.level}","${r.notes.replace(/"/g, '""')}"`)
       .join('\n');
     const csvContent = csvHeader + csvRows;
 
@@ -182,6 +202,35 @@
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     addToast('CSV exported successfully.', 'success');
+  }
+
+  function handleExportJson() {
+    const rows = DOMAINS.flatMap((domain) =>
+      domain.sections.flatMap((section) =>
+        section.subdomains.map((sub) => ({
+          domainId: domain.id,
+          domainTitle: domain.title,
+          sectionId: section.id,
+          sectionTitle: section.title,
+          subdomainId: sub.id,
+          subdomainTitle: sub.title,
+          level: state.answers[sub.id] || 'Not Started',
+          notes: state.answers['notes:' + sub.id] || '',
+        }))
+      )
+    );
+
+    const jsonContent = JSON.stringify(rows, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cosn-ai-maturity-export-${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    addToast('JSON exported successfully.', 'success');
   }
 
   function startOver() {
@@ -344,6 +393,16 @@
                         </button>
                       `;
                     }).join('')}
+                  </div>
+                  <div class="pt-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Notes <span class="font-normal normal-case tracking-normal text-slate-300">(${(state.answers['notes:' + sub.id] || '').length}/300)</span></label>
+                    <textarea
+                      maxlength="300"
+                      placeholder="Add optional notes for this subdomain..."
+                      class="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 placeholder-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none transition-colors"
+                      rows="2"
+                      oninput="app.updateNote('${sub.id}', this.value)"
+                    >${escapeHtml(state.answers['notes:' + sub.id] || '')}</textarea>
                   </div>
                 </div>
               `).join('')}
@@ -544,6 +603,11 @@
     if (window.SyncManager && window.SyncManager._render) {
       window.SyncManager._render();
     }
+
+    // Re-render dashboard if it's currently visible
+    if (state.showDashboard) {
+      renderSessionDashboard();
+    }
   }
 
   function renderSessionDashboard() {
@@ -567,6 +631,7 @@
           subdomainId: sub.id,
           subdomainTitle: sub.title,
           level: state.answers[sub.id] || 'Not Started',
+          notes: state.answers['notes:' + sub.id] || '',
         }))
       )
     );
@@ -586,6 +651,9 @@
           <div class="flex flex-wrap gap-2">
             <button onclick="app.exportCsv()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-teal-700 transition-colors">
               Export CSV
+            </button>
+            <button onclick="app.exportJsonDashboard()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors">
+              Export JSON
             </button>
             <button onclick="app.closeDashboard()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-950 transition-colors">
               Back to Assessment
@@ -626,6 +694,7 @@
                     <th class="px-4 py-3 text-left font-bold">Section</th>
                     <th class="px-4 py-3 text-left font-bold">Subdomain</th>
                     <th class="px-4 py-3 text-left font-bold">Level</th>
+                    <th class="px-4 py-3 text-left font-bold">Notes</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y">
@@ -653,6 +722,9 @@
                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${badgeClass}">
                             ${row.level}
                           </span>
+                        </td>
+                        <td class="px-4 py-3 align-top text-xs text-slate-600 max-w-[200px]">
+                          ${row.notes ? escapeHtml(row.notes) : '<span class="text-slate-300 italic">—</span>'}
                         </td>
                       </tr>
                     `;
@@ -714,7 +786,9 @@
     startOver: startOver,
     exportJSON: exportJSON,
     copyToClipboard: copyToClipboard,
+    updateNote: handleNoteUpdate,
     exportCsv: handleExportCsv,
+    exportJsonDashboard: handleExportJson,
     closeDashboard: handleCloseDashboard
   };
 

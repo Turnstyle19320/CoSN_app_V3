@@ -156,14 +156,24 @@
     }));
   }
 
-  function handleRemoteData(remoteData) {
+  function handleRemoteData(remoteData, isFullSync) {
     try {
       if (!remoteData || typeof remoteData !== 'object') {
         console.warn('[App] Ignoring invalid remote data:', remoteData);
         return;
       }
 
-      // Detect which subdomain IDs actually changed
+      if (isFullSync) {
+        // FULL_SYNC = replace all local data with the host's authoritative data
+        console.log('[App] FULL_SYNC received — replacing local answers with host data');
+        state.answers = { ...remoteData };
+        state.lastUpdatedAt = new Date();
+        saveData();
+        render();
+        return;
+      }
+
+      // Incremental UPDATE — merge only changed keys
       const changedIds = new Set();
       for (const key of Object.keys(remoteData)) {
         if (state.answers[key] !== remoteData[key]) {
@@ -611,6 +621,7 @@
             <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Active Session</p>
             <p class="text-sm font-bold truncate">${escapeHtml(activeLabel)}</p>
             ${state.readOnly ? '<p class="text-[10px] text-amber-400 font-bold mt-1 uppercase">Read-Only Mode</p>' : ''}
+            <button onclick="app.leaveSession()" class="mt-3 w-full text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-1.5 transition-colors">Leave Session</button>
           </div>
         ` : ''}
         ${(!state.sessionState || state.sessionState.mode === 'idle') && (state.screen === 'questions' || state.screen === 'results') ? `
@@ -993,6 +1004,25 @@
       state.selectedDept = null;
       state.readOnly = false;
       updateVisibleDomains();
+      render();
+    },
+
+    leaveSession: function() {
+      // Disconnect sync if active
+      if (window.SyncManager) {
+        window.SyncManager.stopSync();
+      }
+      // Create a fresh local session so the user keeps working locally
+      state.answers = {};
+      state.readOnly = false;
+      state.activeSessionId = null;
+      state.selectedDept = null;
+      state.screen = 'dept';
+      if (window.SyncManager) {
+        window.SyncManager.setCurrentData({});
+      }
+      updateVisibleDomains();
+      history.pushState({ screen: 'dept' }, '', '');
       render();
     }
   };

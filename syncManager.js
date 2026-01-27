@@ -235,8 +235,10 @@ window.SyncManager = (function() {
             broadcast(data.payload, conn);
           }
         } else {
-          if ((data.type === 'FULL_SYNC' || data.type === 'UPDATE') && onDataReceived) {
-            onDataReceived(data.payload);
+          if (data.type === 'FULL_SYNC' && onDataReceived) {
+            onDataReceived(data.payload, true);
+          } else if (data.type === 'UPDATE' && onDataReceived) {
+            onDataReceived(data.payload, false);
           }
           if (data.type === 'LOCK' && onLockChanged) {
             onLockChanged(data.locked);

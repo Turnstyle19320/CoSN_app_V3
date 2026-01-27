@@ -260,18 +260,13 @@
 
   function startOver() {
     if (state.readOnly) return;
-    if (confirm('Are you sure you want to start over? This will create a fresh session.')) {
+    if (confirm('Are you sure you want to start over? This will clear your current selections.')) {
       state.answers = {};
       state.screen = 'welcome';
       state.selectedDept = null;
       state.activeDomainIdx = 0;
       state.readOnly = false;
-
-      // Create a new session if admin module is available
-      if (window.adminPanel) {
-        const session = window.adminPanel.createNewSession('Session ' + new Date().toLocaleDateString());
-        state.activeSessionId = session.id;
-      }
+      state.activeSessionId = null;
 
       updateVisibleDomains();
       render();
@@ -322,13 +317,14 @@
   // ============================================
 
   function renderWelcomeScreen() {
-    const sessions = window.adminPanel ? window.adminPanel.getSessionsIndex() : [];
+    const allSessions = window.adminPanel ? window.adminPanel.getSessionsIndex() : [];
+    const collabSessions = allSessions.filter(s => s.roomCode);
 
-    const previousSessionsHtml = sessions.length === 0 ? '' : `
+    const previousSessionsHtml = collabSessions.length === 0 ? '' : `
         <div class="space-y-4">
-          <h3 class="text-lg font-bold text-navy">Continue a Previous Session</h3>
+          <h3 class="text-lg font-bold text-navy">Previous Collaborative Sessions</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            ${sessions.map(s => `
+            ${collabSessions.map(s => `
               <button onclick="app.resumeSession('${s.id}')" class="bg-white p-5 rounded-2xl border-2 ${s.locked ? 'border-amber-200' : 'border-slate-100 hover:border-teal'} text-left transition-all hover:shadow-lg group relative">
                 <div class="flex items-center justify-between mb-2">
                   <h4 class="font-bold text-navy group-hover:text-teal text-base">${s.locked ? '🔒 ' : ''}${escapeHtml(s.label)}</h4>
@@ -337,7 +333,7 @@
                 <div class="flex items-center gap-4 text-xs text-slate-400">
                   <span>${new Date(s.lastModified).toLocaleDateString()}</span>
                   <span class="font-bold">${s.completionPercent}% complete</span>
-                  ${s.roomCode ? '<span class="bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-bold">Collab</span>' : ''}
+                  <span class="bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-bold">${escapeHtml(s.roomCode)}</span>
                 </div>
                 <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
                   <div class="h-full bg-teal rounded-full" style="width: ${s.completionPercent}%"></div>
@@ -569,8 +565,6 @@
 
         <div class="flex items-center justify-center space-x-4">
           <button onclick="app.goToScreen('questions')" class="text-slate-900 font-bold hover:underline">Edit Responses</button>
-          <span class="text-slate-300">|</span>
-          <button onclick="app.startOver()" class="text-red-500 font-bold hover:underline">Start Over</button>
         </div>
       </div>
     `;
@@ -617,16 +611,9 @@
               </button>
             `).join('')}
           </nav>
-          <button onclick="app.startOver()" class="w-full text-center mt-8 text-red-500 text-xs font-bold hover:underline opacity-60 hover:opacity-100 transition-opacity">
-            Reset All Assessment Data
-          </button>
         ` : ''}
 
-        ${state.screen === 'dept' ? `
-          <button onclick="app.startOver()" class="w-full text-center mt-8 text-red-500 text-xs font-bold hover:underline opacity-60 hover:opacity-100 transition-opacity">
-            Reset All Assessment Data
-          </button>
-        ` : ''}
+        ${state.screen === 'dept' ? '' : ''}
       </div>
     `;
   }
@@ -822,13 +809,18 @@
       const dept = DEPARTMENTS.find(d => d.id === deptId);
       state.selectedDept = dept;
 
-      // Auto-create session if none active
+      // Auto-create a local session so data persists
       if (!state.activeSessionId && window.adminPanel) {
         const label = dept.members
           ? dept.name + ' — ' + dept.members
           : dept.name;
         const session = window.adminPanel.createNewSession(label);
         state.activeSessionId = session.id;
+      }
+
+      // Warn if not connected to a collab session
+      if (!state.sessionState || state.sessionState.mode === 'idle') {
+        addToast('You are not in a collaborative session. Your selections will be saved locally only. Use the Collaboration Hub to enter a join code.', 'info');
       }
 
       updateVisibleDomains();
@@ -873,15 +865,15 @@
     closeDashboard: handleCloseDashboard,
 
     resumeSession: function(sessionId) {
-      state.readOnly = false;
-      state.screen = 'welcome';
       state.activeDomainIdx = 0;
       state.selectedDept = null;
       state.answers = {};
       loadSavedData(sessionId);
-      // If the session had a department, go straight to questions
+      // If the session had a department, go straight to questions; otherwise go to group selection
       if (state.selectedDept) {
         state.screen = 'questions';
+      } else {
+        state.screen = 'dept';
       }
       render();
     },

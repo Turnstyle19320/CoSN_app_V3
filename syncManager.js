@@ -738,6 +738,9 @@ window.SyncManager = (function() {
     startHost: function() {
       startHost();
     },
+    startHostWithCode: function(code) {
+      startHostWithCode(code);
+    },
     joinRoom: function(code) {
       joinRoom(code);
     },

@@ -331,6 +331,10 @@
                             <button onclick="window.adminPanel.resumeSession('${s.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Resume">
                               Resume
                             </button>
+                            <button onclick="window.adminPanel.reconnectSession('${s.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1" title="Host this session live">
+                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0" /></svg>
+                              Host Live
+                            </button>
                             <button onclick="window.adminPanel.reviewSession('${s.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Review">
                               Review
                             </button>
@@ -491,10 +495,16 @@
 
       const session = createNewSession(label);
 
-      // Load into assessment tool and switch tabs
+      // Load into assessment tool
       if (window.app && window.app.loadSession) {
         window.app.loadSession(session.id);
       }
+
+      // Start hosting so the join code appears in the collab hub
+      if (window.SyncManager) {
+        window.SyncManager.startHost();
+      }
+
       if (typeof switchTab === 'function') {
         switchTab('assessment');
       }
@@ -510,6 +520,33 @@
       if (window.app && window.app.loadSession) {
         window.app.loadSession(id);
       }
+      if (typeof switchTab === 'function') {
+        switchTab('assessment');
+      }
+    },
+
+    reconnectSession: function(id) {
+      const session = getSession(id);
+      if (!session) {
+        alert('Session not found.');
+        return;
+      }
+
+      // Load session into app
+      if (window.app && window.app.loadSession) {
+        window.app.loadSession(id);
+      }
+
+      // Start hosting — reuse existing room code or generate a new one
+      if (window.SyncManager) {
+        if (session.roomCode) {
+          window.SyncManager.startHostWithCode(session.roomCode);
+        } else {
+          window.SyncManager.startHost();
+        }
+      }
+
+      // Switch to assessment tab
       if (typeof switchTab === 'function') {
         switchTab('assessment');
       }

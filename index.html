@@ -89,6 +89,21 @@
     #content-roadmap {
       background: #667eea;
     }
+    @media print {
+      body > *:not(#content-admin) { display: none !important; }
+      #content-admin { display: block !important; }
+      #admin-review-modal {
+        position: static !important;
+        background: none !important;
+        backdrop-filter: none !important;
+      }
+      #admin-review-modal > div {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      details { break-inside: avoid; }
+      button { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -125,6 +140,14 @@
           >
             Assessment Tool
           </button>
+          <button
+            id="tab-admin"
+            onclick="switchTab('admin')"
+            class="tab-button px-6 py-2 rounded-lg font-bold text-sm transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            Admin
+          </button>
         </div>
       </div>
     </div>
@@ -149,12 +172,18 @@
     <div id="session-dashboard" class="hidden fixed inset-0 z-[120] flex items-start justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto"></div>
   </div>
 
+  <!-- Admin Tab Content -->
+  <div id="content-admin" class="tab-content">
+    <div id="admin-panel" class="min-h-[calc(100vh-64px)]" style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);"></div>
+  </div>
+
   <!-- Load PeerJS -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <!-- Load app modules -->
   <script src="constants.js"></script>
   <script src="syncManager.js"></script>
+  <script src="admin.js"></script>
   <script src="app.js"></script>
 
   <!-- Tab Switching Logic -->
@@ -181,6 +210,11 @@
 
       // Save active tab to localStorage
       localStorage.setItem('activeTab', tabName);
+
+      // Render admin panel when switching to admin tab
+      if (tabName === 'admin' && window.adminPanel) {
+        window.adminPanel.render();
+      }
     }
 
     // Initialize tab system - run this immediately, not on DOMContentLoaded

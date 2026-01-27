@@ -20,11 +20,26 @@
     },
     showDashboard: false,
     lastUpdatedAt: null,
-    visibleDomains: DOMAINS
+    visibleDomains: DOMAINS,
+    activeSessionId: null,
+    readOnly: false
   };
 
-  // Load saved data from localStorage
-  function loadSavedData() {
+  // Load saved data - either from a session or legacy localStorage
+  function loadSavedData(sessionId) {
+    if (sessionId && window.adminPanel) {
+      const session = window.adminPanel.getSession(sessionId);
+      if (session) {
+        state.answers = session.answers || {};
+        state.activeSessionId = sessionId;
+        if (session.department) {
+          state.selectedDept = DEPARTMENTS.find(d => d.id === session.department) || null;
+          updateVisibleDomains();
+        }
+        return;
+      }
+    }
+    // Legacy fallback
     const saved = localStorage.getItem('ai_assessment_data');
     if (saved) {
       try {
@@ -35,8 +50,16 @@
     }
   }
 
-  // Save data to localStorage
+  // Save data to localStorage / active session
   function saveData() {
+    if (state.activeSessionId && window.adminPanel) {
+      window.adminPanel.updateSession(
+        state.activeSessionId,
+        state.answers,
+        state.selectedDept ? state.selectedDept.id : null
+      );
+    }
+    // Always also save to legacy key for backward compat
     localStorage.setItem('ai_assessment_data', JSON.stringify(state.answers));
   }
 
@@ -117,6 +140,7 @@
   // ============================================
 
   function handleMaturitySelect(subdomainId, level) {
+    if (state.readOnly) return;
     state.answers[subdomainId] = level;
     saveData();
     addToast(`${level} level saved.`, 'success');
@@ -130,6 +154,7 @@
   }
 
   function handleNoteUpdate(subdomainId, value) {
+    if (state.readOnly) return;
     const noteKey = 'notes:' + subdomainId;
     state.answers[noteKey] = value.slice(0, 300);
     saveData();
@@ -234,12 +259,22 @@
   }
 
   function startOver() {
-    if (confirm('Are you sure you want to start over? All current progress will be lost.')) {
+    if (state.readOnly) return;
+    if (confirm('Are you sure you want to start over? This will create a fresh session.')) {
       state.answers = {};
       state.screen = 'welcome';
       state.selectedDept = null;
       state.activeDomainIdx = 0;
-      localStorage.removeItem('ai_assessment_data');
+      state.readOnly = false;
+
+      // Create a new session if admin module is available
+      if (window.adminPanel) {
+        const session = window.adminPanel.createNewSession('Session ' + new Date().toLocaleDateString());
+        state.activeSessionId = session.id;
+      } else {
+        localStorage.removeItem('ai_assessment_data');
+      }
+
       updateVisibleDomains();
       render();
     }
@@ -522,8 +557,19 @@
     const isQuestionsScreen = state.screen === 'questions';
     const progress = calculateProgress();
 
+    const activeLabel = state.activeSessionId && window.adminPanel
+      ? (window.adminPanel.getSession(state.activeSessionId) || {}).label || ''
+      : '';
+
     return `
       <div class="md:w-72 space-y-6 ${isQuestionsScreen ? 'md:order-first' : 'md:order-last'}">
+        ${activeLabel ? `
+          <div class="bg-slate-900 text-white p-4 rounded-xl shadow-sm">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Active Session</p>
+            <p class="text-sm font-bold truncate">${escapeHtml(activeLabel)}</p>
+            ${state.readOnly ? '<p class="text-[10px] text-amber-400 font-bold mt-1 uppercase">Read-Only Mode</p>' : ''}
+          </div>
+        ` : ''}
         ${isQuestionsScreen ? `
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Progress Track</h4>
@@ -754,6 +800,7 @@
       updateVisibleDomains();
       state.screen = 'questions';
       state.activeDomainIdx = 0;
+      saveData(); // Persist department selection to session
       render();
     },
 
@@ -789,7 +836,37 @@
     updateNote: handleNoteUpdate,
     exportCsv: handleExportCsv,
     exportJsonDashboard: handleExportJson,
-    closeDashboard: handleCloseDashboard
+    closeDashboard: handleCloseDashboard,
+
+    loadSession: function(sessionId) {
+      state.readOnly = false;
+      state.screen = 'welcome';
+      state.activeDomainIdx = 0;
+      state.selectedDept = null;
+      state.answers = {};
+      loadSavedData(sessionId);
+      updateVisibleDomains();
+      render();
+    },
+
+    getActiveSessionId: function() {
+      return state.activeSessionId;
+    },
+
+    setReadOnly: function(val) {
+      state.readOnly = !!val;
+      render();
+    },
+
+    clearActiveSession: function() {
+      state.activeSessionId = null;
+      state.answers = {};
+      state.screen = 'welcome';
+      state.selectedDept = null;
+      state.readOnly = false;
+      updateVisibleDomains();
+      render();
+    }
   };
 
   // ============================================
@@ -806,7 +883,19 @@
       return;
     }
 
-    loadSavedData();
+    // Migrate legacy data to sessions if needed
+    if (window.adminPanel) {
+      window.adminPanel.migrateIfNeeded();
+      // Auto-load most recent session if one exists
+      const sessions = window.adminPanel.getSessionsIndex();
+      if (sessions.length > 0) {
+        loadSavedData(sessions[0].id);
+      } else {
+        loadSavedData();
+      }
+    } else {
+      loadSavedData();
+    }
 
     // Initialize SyncManager
     if (window.SyncManager) {

@@ -132,14 +132,16 @@
     if (state.readOnly) return;
     state.answers[subdomainId] = level;
     saveData();
-    addToast(`${level} level saved.`, 'success');
 
     // Dispatch event for sync
     window.dispatchEvent(new CustomEvent('assessment-update', {
       detail: state.answers
     }));
 
-    render();
+    // Targeted patch instead of full re-render
+    if (!patchAnswers(new Set([subdomainId]))) {
+      render();
+    }
   }
 
   function handleNoteUpdate(subdomainId, value) {
@@ -160,11 +162,24 @@
         console.warn('[App] Ignoring invalid remote data:', remoteData);
         return;
       }
+
+      // Detect which subdomain IDs actually changed
+      const changedIds = new Set();
+      for (const key of Object.keys(remoteData)) {
+        if (state.answers[key] !== remoteData[key]) {
+          // Strip 'notes:' prefix to get the subdomain ID
+          changedIds.add(key.startsWith('notes:') ? key.slice(6) : key);
+        }
+      }
+
       state.answers = { ...state.answers, ...remoteData };
       state.lastUpdatedAt = new Date();
-
       saveData();
-      render();
+
+      // Only patch changed cards if on questions screen; otherwise full render
+      if (changedIds.size === 0 || !patchAnswers(changedIds)) {
+        render();
+      }
     } catch (err) {
       console.error('[App] Error processing remote data:', err);
     }
@@ -429,7 +444,7 @@
             </div>
             <div class="grid grid-cols-1 gap-8">
               ${section.subdomains.map(sub => `
-                <div class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 space-y-6 relative overflow-hidden group">
+                <div id="card-${sub.id}" class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 space-y-6 relative overflow-hidden group">
                   <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-100 group-hover:bg-teal transition-colors"></div>
                   <h4 class="text-2xl font-bold text-navy"><span class="text-teal font-black">${escapeHtml(sub.id)}</span> ${escapeHtml(sub.title)}</h4>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -609,9 +624,9 @@
           <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Progress Track</h4>
             <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-              <div class="h-full bg-teal transition-all duration-500" style="width: ${progress}%"></div>
+              <div data-progress-bar class="h-full bg-teal transition-all duration-500" style="width: ${progress}%"></div>
             </div>
-            <p class="text-right text-xs mt-2 text-slate-500 font-bold">${progress}% Domain Complete</p>
+            <p data-progress-label class="text-right text-xs mt-2 text-slate-500 font-bold">${progress}% Domain Complete</p>
           </div>
         ` : ''}
 
@@ -649,6 +664,67 @@
       default:
         return '';
     }
+  }
+
+  function renderSubdomainCard(sub) {
+    const isSelected = (level) => state.answers[sub.id] === level;
+    return ['Emerging', 'Developing', 'Mature'].map(level => {
+      const selected = isSelected(level);
+      const borderClass = selected
+        ? (level === 'Emerging' ? 'border-red-500 bg-red-50/50'
+          : level === 'Developing' ? 'border-amber-500 bg-amber-50/50'
+          : 'border-teal bg-teal-light/50')
+        : 'border-slate-50 hover:border-slate-200 bg-slate-50/30';
+      const radioClass = selected
+        ? (level === 'Emerging' ? 'bg-red-500 border-red-200'
+          : level === 'Developing' ? 'bg-amber-500 border-amber-200'
+          : 'bg-teal border-teal-light')
+        : 'bg-transparent border-slate-200';
+      const labelClass = selected ? 'text-navy' : 'text-slate-400';
+      const textClass = selected ? 'text-slate-700 font-medium' : 'text-slate-500';
+      return `
+        <button onclick="app.selectMaturity('${sub.id}', '${level}')" class="p-6 rounded-2xl border-2 text-left transition-all relative ${borderClass}">
+          <div class="flex items-center mb-3">
+            <div class="w-4 h-4 rounded-full mr-2 border-2 ${radioClass}"></div>
+            <span class="text-[10px] font-black uppercase tracking-widest ${labelClass}">${level}</span>
+          </div>
+          <p class="text-xs leading-relaxed ${textClass}">${escapeHtml(sub.descriptions[level])}</p>
+        </button>
+      `;
+    }).join('');
+  }
+
+  // Targeted update: only patch changed subdomain cards + progress bar
+  function patchAnswers(changedIds) {
+    if (state.screen !== 'questions') return false;
+    const currentDomain = state.visibleDomains[state.activeDomainIdx];
+    if (!currentDomain) return false;
+
+    let patched = false;
+    for (const section of currentDomain.sections) {
+      for (const sub of section.subdomains) {
+        if (changedIds && !changedIds.has(sub.id)) continue;
+        const cardEl = document.getElementById('card-' + sub.id);
+        if (!cardEl) continue;
+        // Update the level buttons grid
+        const grid = cardEl.querySelector('.grid');
+        if (grid) {
+          grid.innerHTML = renderSubdomainCard(sub);
+          patched = true;
+        }
+      }
+    }
+
+    // Update progress bar
+    if (patched) {
+      const progress = calculateProgress();
+      const progressBar = document.querySelector('[data-progress-bar]');
+      const progressLabel = document.querySelector('[data-progress-label]');
+      if (progressBar) progressBar.style.width = progress + '%';
+      if (progressLabel) progressLabel.textContent = progress + '% Domain Complete';
+    }
+
+    return patched;
   }
 
   function render() {

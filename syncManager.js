@@ -637,38 +637,7 @@ window.SyncManager = (function() {
                 Join
               </button>
             </div>
-            <div class="relative">
-              <div class="absolute inset-0 flex items-center pointer-events-none"><span class="w-full border-t"></span></div>
-              <div class="relative flex justify-center text-[10px] uppercase font-bold"><span class="bg-white px-2 text-slate-600 tracking-tighter">Admin Only</span></div>
-            </div>
-            ${window.adminPanel && window.adminPanel.isAuthenticated() ? `
-              <button
-                onclick="window.SyncManager.startHost()"
-                class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-md transition-all active:scale-95 flex items-center justify-center"
-              >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0M2.828 7.071a15 15 0 0121.214 0" /></svg>
-                Host Session
-              </button>
-            ` : `
-              <div id="sync-host-auth" class="space-y-2">
-                <div class="flex space-x-2">
-                  <input
-                    type="password"
-                    id="sync-host-password"
-                    placeholder="Admin password"
-                    class="flex-1 border-2 border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-teal-600 outline-none transition-colors"
-                    onkeydown="if(event.key === 'Enter') window.SyncManager.hostWithAuth()"
-                  />
-                  <button
-                    onclick="window.SyncManager.hostWithAuth()"
-                    class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-teal-700 transition-all cursor-pointer"
-                  >
-                    Host
-                  </button>
-                </div>
-                <p id="sync-host-error" class="hidden text-xs text-red-600 font-medium"></p>
-              </div>
-            `}
+            <p class="text-[10px] text-slate-400 text-center">To host a session, use the Admin panel.</p>
           ` : `
             <div class="animate-fade-in">
               <div class="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-teal-600/30 text-center mb-4">
@@ -773,23 +742,6 @@ window.SyncManager = (function() {
       joinRoom(code);
     },
     joinFromInput,
-    hostWithAuth: async function() {
-      const input = document.getElementById('sync-host-password');
-      const errorEl = document.getElementById('sync-host-error');
-      if (!input || !window.adminPanel) return;
-
-      const ok = await window.adminPanel.authenticate(input.value);
-      if (ok) {
-        startHost();
-      } else {
-        if (errorEl) {
-          errorEl.textContent = 'Incorrect password.';
-          errorEl.classList.remove('hidden');
-        }
-        input.value = '';
-        input.focus();
-      }
-    },
     getRoomCode: function() {
       return roomCode || null;
     },

@@ -573,7 +573,16 @@
     getSession: getSession,
     getSessionsIndex: getSessionsIndex,
     createNewSession: createNewSession,
-    migrateIfNeeded: migrateIfNeeded
+    migrateIfNeeded: migrateIfNeeded,
+    isAuthenticated: isAuthenticated,
+    authenticate: async function(password) {
+      const hash = await hashPassword(password);
+      if (hash === PASSWORD_HASH) {
+        setAuthenticated();
+        return true;
+      }
+      return false;
+    }
   };
 
 })();

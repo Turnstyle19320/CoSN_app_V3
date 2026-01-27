@@ -377,6 +377,10 @@
     return `
       <div class="flex-1 space-y-8 animate-fade-in">
         <div>
+          <button onclick="app.goToScreen('welcome')" class="text-sm text-slate-400 hover:text-teal font-bold flex items-center gap-1 mb-3 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            Back
+          </button>
           <h2 class="text-3xl font-bold text-navy">Select Your Group</h2>
           <p class="text-slate-500">Find your name and select your assigned domain.</p>
         </div>
@@ -403,6 +407,10 @@
       <div class="flex-1 space-y-10 animate-fade-in">
         <div class="flex items-center justify-between border-b border-slate-200 pb-6">
           <div>
+            <button onclick="app.goToScreen('dept')" class="text-sm text-slate-400 hover:text-teal font-bold flex items-center gap-1 mb-3 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+              Change Group
+            </button>
             <h2 class="text-3xl font-black text-navy">${escapeHtml(currentDomain.title)}</h2>
             <div class="flex items-center space-x-2 mt-2">
               <span class="text-[10px] font-black uppercase text-white bg-teal px-2 py-0.5 rounded">Domain ${currentDomain.id}</span>
@@ -808,6 +816,7 @@
   window.app = {
     goToScreen: function(screen) {
       state.screen = screen;
+      history.pushState({ screen: screen }, '', '');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       render();
     },
@@ -825,6 +834,7 @@
       updateVisibleDomains();
       state.screen = 'questions';
       state.activeDomainIdx = 0;
+      history.pushState({ screen: 'questions' }, '', '');
       saveData();
       render();
     },
@@ -868,12 +878,12 @@
       state.selectedDept = null;
       state.answers = {};
       loadSavedData(sessionId);
-      // If the session had a department, go straight to questions; otherwise go to group selection
       if (state.selectedDept) {
         state.screen = 'questions';
       } else {
         state.screen = 'dept';
       }
+      history.pushState({ screen: state.screen }, '', '');
       render();
     },
 
@@ -914,6 +924,16 @@
 
   function init() {
     console.log('[App] Initializing...');
+
+    // Set initial history state and listen for browser back/forward
+    history.replaceState({ screen: 'welcome' }, '', '');
+    window.addEventListener('popstate', function(e) {
+      if (e.state && e.state.screen) {
+        state.screen = e.state.screen;
+        window.scrollTo({ top: 0 });
+        render();
+      }
+    });
 
     // Verify #app element exists
     const appElement = document.getElementById('app');

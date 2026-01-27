@@ -84,6 +84,14 @@
 
   function createNewSession(label) {
     const id = 's_' + Date.now();
+    return createSessionWithId(id, label);
+  }
+
+  function createSessionWithId(id, label) {
+    // Return existing session if it already exists
+    const existing = getSession(id);
+    if (existing) return existing;
+
     const now = new Date().toISOString();
     const session = {
       id: id,
@@ -257,7 +265,7 @@
   }
 
   function renderDashboard(container) {
-    const sessions = getSessionsIndex();
+    const sessions = getSessionsIndex().filter(s => s.id !== 'local');
     const activeSessionId = window.app && window.app.getActiveSessionId ? window.app.getActiveSessionId() : null;
 
     container.innerHTML = `
@@ -628,6 +636,7 @@
     getSession: getSession,
     getSessionsIndex: getSessionsIndex,
     createNewSession: createNewSession,
+    createSessionWithId: createSessionWithId,
     migrateIfNeeded: migrateIfNeeded,
     isAuthenticated: isAuthenticated,
     authenticate: async function(password) {

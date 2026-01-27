@@ -25,8 +25,33 @@
     readOnly: false
   };
 
-  // Load saved data from a session
-  function loadSavedData(sessionId) {
+  // Fixed local session ID — only one local session per browser
+  const LOCAL_SESSION_ID = 'local';
+
+  // Get or create the single local session
+  function ensureLocalSession() {
+    if (!window.adminPanel) return null;
+    let session = window.adminPanel.getSession(LOCAL_SESSION_ID);
+    if (!session) {
+      session = window.adminPanel.createSessionWithId(LOCAL_SESSION_ID, 'Local Device Session');
+    }
+    return session;
+  }
+
+  // Fully switch to a session — clears all prior state first
+  function switchToSession(sessionId) {
+    // 1. Wipe in-memory state
+    state.answers = {};
+    state.activeSessionId = null;
+    state.selectedDept = null;
+    state.readOnly = false;
+
+    // 2. Clear SyncManager's cached data so nothing leaks
+    if (window.SyncManager) {
+      window.SyncManager.setCurrentData({});
+    }
+
+    // 3. Load the target session's data
     if (sessionId && window.adminPanel) {
       const session = window.adminPanel.getSession(sessionId);
       if (session) {
@@ -35,10 +60,16 @@
         state.readOnly = !!session.locked;
         if (session.department) {
           state.selectedDept = DEPARTMENTS.find(d => d.id === session.department) || null;
-          updateVisibleDomains();
         }
       }
     }
+
+    // 4. Push current answers into SyncManager so host sends correct data
+    if (window.SyncManager) {
+      window.SyncManager.setCurrentData(state.answers);
+    }
+
+    updateVisibleDomains();
   }
 
   // Save data to active session
@@ -49,6 +80,10 @@
         state.answers,
         state.selectedDept ? state.selectedDept.id : null
       );
+      // Keep SyncManager's currentData in sync
+      if (window.SyncManager) {
+        window.SyncManager.setCurrentData(state.answers);
+      }
     }
   }
 
@@ -198,8 +233,8 @@
   function handleSessionUpdate(session) {
     state.sessionState = session;
 
-    // Save room code to session when connected
-    if (session.code && state.activeSessionId && window.adminPanel) {
+    // Save room code to collab sessions (not the local session)
+    if (session.code && state.activeSessionId && state.activeSessionId !== LOCAL_SESSION_ID && window.adminPanel) {
       const s = window.adminPanel.getSession(state.activeSessionId);
       if (s && s.roomCode !== session.code) {
         s.roomCode = session.code;
@@ -286,14 +321,9 @@
   function startOver() {
     if (state.readOnly) return;
     if (confirm('Are you sure you want to start over? This will clear your current selections.')) {
-      state.answers = {};
-      state.screen = 'welcome';
-      state.selectedDept = null;
       state.activeDomainIdx = 0;
-      state.readOnly = false;
-      state.activeSessionId = null;
-
-      updateVisibleDomains();
+      switchToSession(null);
+      state.screen = 'welcome';
       render();
     }
   }
@@ -387,10 +417,13 @@
             <p class="text-sm text-slate-500">Enable the Collaboration Hub to aggregate results with peers instantly.</p>
           </div>
         </div>
-        <div class="pt-4">
+        <div class="pt-4 flex items-center gap-4">
           <button onclick="app.goToScreen('dept')" class="bg-teal hover:bg-teal-dark text-white px-12 py-5 rounded-2xl font-black text-xl shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center">
             Start My Assessment
             <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </button>
+          <button onclick="app.resetLocalSession()" class="text-slate-400 hover:text-red-500 text-sm font-bold transition-colors">
+            Reset Local Session
           </button>
         </div>
         ${previousSessionsHtml}
@@ -610,7 +643,8 @@
     const isQuestionsScreen = state.screen === 'questions';
     const progress = calculateProgress();
 
-    const activeLabel = state.activeSessionId && window.adminPanel
+    const isCollabSession = state.activeSessionId && state.activeSessionId !== LOCAL_SESSION_ID;
+    const activeLabel = isCollabSession && window.adminPanel
       ? (window.adminPanel.getSession(state.activeSessionId) || {}).label || ''
       : '';
 
@@ -624,7 +658,7 @@
             <button onclick="app.leaveSession()" class="mt-3 w-full text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-1.5 transition-colors">Leave Session</button>
           </div>
         ` : ''}
-        ${(!state.sessionState || state.sessionState.mode === 'idle') && (state.screen === 'questions' || state.screen === 'results') ? `
+        ${(!isCollabSession) && (!state.sessionState || state.sessionState.mode === 'idle') && (state.screen === 'questions' || state.screen === 'results') ? `
           <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 space-y-2">
             <p class="text-xs font-black text-amber-700 uppercase tracking-widest">Preview Mode</p>
             <p class="text-xs text-amber-600">You are not connected to a collaborative session. Selections are saved to this device only.</p>
@@ -915,10 +949,10 @@
       const dept = DEPARTMENTS.find(d => d.id === deptId);
       state.selectedDept = dept;
 
-      // Auto-create a local session so data persists
-      if (!state.activeSessionId && window.adminPanel) {
-        const session = window.adminPanel.createNewSession('Local Device Session');
-        state.activeSessionId = session.id;
+      // Ensure the single local session exists and is active (if not in a collab session)
+      if (!state.activeSessionId) {
+        ensureLocalSession();
+        state.activeSessionId = LOCAL_SESSION_ID;
       }
 
       updateVisibleDomains();
@@ -965,9 +999,7 @@
 
     resumeSession: function(sessionId) {
       state.activeDomainIdx = 0;
-      state.selectedDept = null;
-      state.answers = {};
-      loadSavedData(sessionId);
+      switchToSession(sessionId);
       if (state.selectedDept) {
         state.screen = 'questions';
       } else {
@@ -978,13 +1010,9 @@
     },
 
     loadSession: function(sessionId) {
-      state.readOnly = false;
-      state.screen = 'welcome';
       state.activeDomainIdx = 0;
-      state.selectedDept = null;
-      state.answers = {};
-      loadSavedData(sessionId);
-      updateVisibleDomains();
+      switchToSession(sessionId);
+      state.screen = 'welcome';
       render();
     },
 
@@ -998,12 +1026,8 @@
     },
 
     clearActiveSession: function() {
-      state.activeSessionId = null;
-      state.answers = {};
+      switchToSession(null);
       state.screen = 'welcome';
-      state.selectedDept = null;
-      state.readOnly = false;
-      updateVisibleDomains();
       render();
     },
 
@@ -1012,18 +1036,37 @@
       if (window.SyncManager) {
         window.SyncManager.stopSync();
       }
-      // Create a fresh local session so the user keeps working locally
-      state.answers = {};
-      state.readOnly = false;
-      state.activeSessionId = null;
-      state.selectedDept = null;
-      state.screen = 'dept';
-      if (window.SyncManager) {
-        window.SyncManager.setCurrentData({});
+      // Switch back to the local session's data
+      state.activeDomainIdx = 0;
+      switchToSession(LOCAL_SESSION_ID);
+      if (state.selectedDept) {
+        state.screen = 'questions';
+      } else {
+        state.screen = 'dept';
       }
-      updateVisibleDomains();
-      history.pushState({ screen: 'dept' }, '', '');
+      history.pushState({ screen: state.screen }, '', '');
       render();
+    },
+
+    resetLocalSession: function() {
+      if (!confirm('Are you sure you want to reset your local session? All local selections will be cleared.')) return;
+      // Clear the local session data
+      if (window.adminPanel) {
+        const session = window.adminPanel.getSession(LOCAL_SESSION_ID);
+        if (session) {
+          window.adminPanel.updateSession(LOCAL_SESSION_ID, {}, null);
+        }
+      }
+      // If currently in local session, clear in-memory state too
+      if (state.activeSessionId === LOCAL_SESSION_ID || !state.activeSessionId) {
+        switchToSession(LOCAL_SESSION_ID);
+        state.screen = 'welcome';
+        state.activeDomainIdx = 0;
+        if (window.SyncManager) {
+          window.SyncManager.setCurrentData({});
+        }
+        render();
+      }
     }
   };
 
@@ -1051,19 +1094,19 @@
       return;
     }
 
-    // Auto-load most recent session if one exists
-    if (window.adminPanel) {
-      const sessions = window.adminPanel.getSessionsIndex();
-      if (sessions.length > 0) {
-        loadSavedData(sessions[0].id);
-      }
-    }
-
-    // Initialize SyncManager
+    // Initialize SyncManager first (before loading data) so callbacks are wired
     if (window.SyncManager) {
       window.SyncManager.init('sync-manager-container', {
         onDataReceived: handleRemoteData,
         onSessionUpdate: handleSessionUpdate,
+        onJoiningSession: function() {
+          // About to join a collab session as client — save local session, then wipe in-memory state
+          saveData();
+          state.answers = {};
+          state.activeSessionId = null;
+          state.readOnly = false;
+          console.log('[App] Cleared local state before joining collab session');
+        },
         onLockChanged: function(locked) {
           state.readOnly = !!locked;
           if (locked) {
@@ -1077,15 +1120,19 @@
         onOpenDashboard: handleOpenDashboard
       });
 
-      // Set current data
-      window.SyncManager.setCurrentData(state.answers);
-
       // Listen for local updates to broadcast
       window.addEventListener('assessment-update', (e) => {
         if (window.SyncManager) {
           window.SyncManager.sendUpdate(e.detail);
         }
       });
+    }
+
+    // Load the local session on startup (collab sessions are only entered
+    // explicitly via join/resume — never auto-loaded)
+    if (window.adminPanel) {
+      ensureLocalSession();
+      switchToSession(LOCAL_SESSION_ID);
     }
 
     console.log('[App] Calling render(), screen:', state.screen);

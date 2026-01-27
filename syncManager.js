@@ -12,6 +12,7 @@ window.SyncManager = (function() {
   let onDataReceived = null;
   let onSessionUpdate = null;
   let onLockChanged = null;
+  let onJoiningSession = null;
   let addToast = null;
 
   // --- Reconnection state ---
@@ -478,6 +479,12 @@ window.SyncManager = (function() {
     }
     const targetCode = code.trim().toUpperCase();
     safeDestroyPeer();
+
+    // Clear any stale data before joining — the host's FULL_SYNC will provide the truth
+    pendingUpdates = [];
+    currentData = {};
+    if (onJoiningSession) onJoiningSession();
+
     hasError = false;
     isConnecting = true;
     lastSessionMode = 'client';
@@ -729,6 +736,7 @@ window.SyncManager = (function() {
         onDataReceived = callbacks.onDataReceived;
         onSessionUpdate = callbacks.onSessionUpdate;
         onLockChanged = callbacks.onLockChanged;
+        onJoiningSession = callbacks.onJoiningSession;
         addToast = callbacks.addToast;
         onDashboardOpen = callbacks.onOpenDashboard;
       }
@@ -736,15 +744,15 @@ window.SyncManager = (function() {
       // Migrate old sessionStorage key if present
       migrateSessionStorage();
 
-      // Auto-reconnect to saved session
+      // Auto-reconnect to saved session (host only — clients must rejoin manually
+      // to avoid leaking stale local data into the host's session)
       const saved = getSavedSession();
-      if (saved) {
+      if (saved && saved.mode === 'host') {
         if (addToast) addToast(`Reconnecting to session ${saved.code}...`, 'info');
-        if (saved.mode === 'host') {
-          startHostWithCode(saved.code);
-        } else {
-          joinRoom(saved.code);
-        }
+        startHostWithCode(saved.code);
+      } else if (saved) {
+        // Clear stale client session — user will need to rejoin
+        clearSession();
       }
 
       // Initial render

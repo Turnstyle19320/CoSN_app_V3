@@ -326,14 +326,10 @@
                         <td class="px-6 py-4">
                           <div class="flex items-center justify-end gap-2">
                             <button onclick="window.adminPanel.toggleLock('${s.id}')" class="${s.locked ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-400 hover:bg-slate-500'} text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="${s.locked ? 'Unlock' : 'Lock'}">
-                              ${s.locked ? '🔒 Locked' : '🔓 Unlock'}
+                              ${s.locked ? '🔒 Locked' : '🔓 Unlocked'}
                             </button>
                             <button onclick="window.adminPanel.resumeSession('${s.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Resume">
                               Resume
-                            </button>
-                            <button onclick="window.adminPanel.reconnectSession('${s.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1" title="Host this session live">
-                              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0" /></svg>
-                              Host Live
                             </button>
                             <button onclick="window.adminPanel.reviewSession('${s.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Review">
                               Review
@@ -518,27 +514,21 @@
         return;
       }
 
-      if (window.app && window.app.loadSession) {
-        window.app.loadSession(id);
-      }
-      if (typeof switchTab === 'function') {
-        switchTab('assessment');
-      }
-    },
-
-    reconnectSession: function(id) {
-      const session = getSession(id);
-      if (!session) {
-        alert('Session not found.');
-        return;
+      // Unlock the session if it's currently locked
+      if (session.locked) {
+        session.locked = false;
+        session.lastModified = new Date().toISOString();
+        saveSession(session);
+        if (window.SyncManager && window.SyncManager.broadcastLock) {
+          window.SyncManager.broadcastLock(false);
+        }
       }
 
-      // Load session into app
       if (window.app && window.app.loadSession) {
         window.app.loadSession(id);
       }
 
-      // Start hosting — reuse existing room code or generate a new one
+      // Re-host with existing room code so the same join code appears
       if (window.SyncManager) {
         if (session.roomCode) {
           window.SyncManager.startHostWithCode(session.roomCode);
@@ -547,7 +537,6 @@
         }
       }
 
-      // Switch to assessment tab
       if (typeof switchTab === 'function') {
         switchTab('assessment');
       }

@@ -64,7 +64,9 @@
       createdAt: session.createdAt,
       lastModified: session.lastModified,
       department: session.department,
-      completionPercent: session.completionPercent
+      completionPercent: session.completionPercent,
+      locked: session.locked || false,
+      roomCode: session.roomCode || null
     };
     if (existing >= 0) {
       index[existing] = summary;
@@ -90,7 +92,9 @@
       lastModified: now,
       department: null,
       answers: {},
-      completionPercent: 0
+      completionPercent: 0,
+      roomCode: null,
+      locked: false
     };
     saveSession(session);
     return session;
@@ -304,7 +308,7 @@
                           <div class="flex items-center gap-3">
                             ${isActive ? '<span class="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></span>' : ''}
                             <div>
-                              <div class="font-bold text-slate-900">${escapeHtml(s.label)}</div>
+                              <div class="font-bold text-slate-900">${s.locked ? '🔒 ' : ''}${escapeHtml(s.label)}</div>
                               <div class="text-xs text-slate-400">${s.id}</div>
                             </div>
                           </div>
@@ -321,6 +325,9 @@
                         </td>
                         <td class="px-6 py-4">
                           <div class="flex items-center justify-end gap-2">
+                            <button onclick="window.adminPanel.toggleLock('${s.id}')" class="${s.locked ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-400 hover:bg-slate-500'} text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="${s.locked ? 'Unlock' : 'Lock'}">
+                              ${s.locked ? '🔒 Locked' : '🔓 Unlock'}
+                            </button>
                             <button onclick="window.adminPanel.resumeSession('${s.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Resume">
                               Resume
                             </button>
@@ -555,6 +562,22 @@
       }
 
       deleteSession(id);
+      render();
+    },
+
+    toggleLock: function(id) {
+      const session = getSession(id);
+      if (!session) return;
+      session.locked = !session.locked;
+      session.lastModified = new Date().toISOString();
+      saveSession(session);
+
+      // If this is the active session in the app, update read-only state
+      const activeId = window.app && window.app.getActiveSessionId ? window.app.getActiveSessionId() : null;
+      if (activeId === id && window.app && window.app.setReadOnly) {
+        window.app.setReadOnly(session.locked);
+      }
+
       render();
     },
 

@@ -25,32 +25,23 @@
     readOnly: false
   };
 
-  // Load saved data - either from a session or legacy localStorage
+  // Load saved data from a session
   function loadSavedData(sessionId) {
     if (sessionId && window.adminPanel) {
       const session = window.adminPanel.getSession(sessionId);
       if (session) {
         state.answers = session.answers || {};
         state.activeSessionId = sessionId;
+        state.readOnly = !!session.locked;
         if (session.department) {
           state.selectedDept = DEPARTMENTS.find(d => d.id === session.department) || null;
           updateVisibleDomains();
         }
-        return;
-      }
-    }
-    // Legacy fallback
-    const saved = localStorage.getItem('ai_assessment_data');
-    if (saved) {
-      try {
-        state.answers = JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to load saved data:', e);
       }
     }
   }
 
-  // Save data to localStorage / active session
+  // Save data to active session
   function saveData() {
     if (state.activeSessionId && window.adminPanel) {
       window.adminPanel.updateSession(
@@ -59,8 +50,6 @@
         state.selectedDept ? state.selectedDept.id : null
       );
     }
-    // Always also save to legacy key for backward compat
-    localStorage.setItem('ai_assessment_data', JSON.stringify(state.answers));
   }
 
   // ============================================
@@ -173,6 +162,7 @@
       }
       state.answers = { ...state.answers, ...remoteData };
       state.lastUpdatedAt = new Date();
+
       saveData();
       render();
     } catch (err) {
@@ -182,6 +172,16 @@
 
   function handleSessionUpdate(session) {
     state.sessionState = session;
+
+    // Save room code to session when connected
+    if (session.code && state.activeSessionId && window.adminPanel) {
+      const s = window.adminPanel.getSession(state.activeSessionId);
+      if (s && s.roomCode !== session.code) {
+        s.roomCode = session.code;
+        window.adminPanel.updateSession(state.activeSessionId, s.answers, s.department);
+      }
+    }
+
     render();
   }
 
@@ -271,8 +271,6 @@
       if (window.adminPanel) {
         const session = window.adminPanel.createNewSession('Session ' + new Date().toLocaleDateString());
         state.activeSessionId = session.id;
-      } else {
-        localStorage.removeItem('ai_assessment_data');
       }
 
       updateVisibleDomains();
@@ -324,6 +322,32 @@
   // ============================================
 
   function renderWelcomeScreen() {
+    const sessions = window.adminPanel ? window.adminPanel.getSessionsIndex() : [];
+
+    const previousSessionsHtml = sessions.length === 0 ? '' : `
+        <div class="space-y-4">
+          <h3 class="text-lg font-bold text-navy">Continue a Previous Session</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            ${sessions.map(s => `
+              <button onclick="app.resumeSession('${s.id}')" class="bg-white p-5 rounded-2xl border-2 ${s.locked ? 'border-amber-200' : 'border-slate-100 hover:border-teal'} text-left transition-all hover:shadow-lg group relative">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="font-bold text-navy group-hover:text-teal text-base">${s.locked ? '🔒 ' : ''}${escapeHtml(s.label)}</h4>
+                  <span class="text-[10px] font-black uppercase tracking-widest ${s.locked ? 'text-amber-500' : 'text-teal'}">${s.locked ? 'Read-only' : 'Resume'}</span>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-slate-400">
+                  <span>${new Date(s.lastModified).toLocaleDateString()}</span>
+                  <span class="font-bold">${s.completionPercent}% complete</span>
+                  ${s.roomCode ? '<span class="bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-bold">Collab</span>' : ''}
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                  <div class="h-full bg-teal rounded-full" style="width: ${s.completionPercent}%"></div>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+    `;
+
     return `
       <div class="flex-1 space-y-12 animate-fade-in">
         <div class="space-y-4">
@@ -348,6 +372,7 @@
             <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
           </button>
         </div>
+        ${previousSessionsHtml}
       </div>
     `;
   }
@@ -794,11 +819,22 @@
     },
 
     selectDept: function(deptId) {
-      state.selectedDept = DEPARTMENTS.find(d => d.id === deptId);
+      const dept = DEPARTMENTS.find(d => d.id === deptId);
+      state.selectedDept = dept;
+
+      // Auto-create session if none active
+      if (!state.activeSessionId && window.adminPanel) {
+        const label = dept.members
+          ? dept.name + ' — ' + dept.members
+          : dept.name;
+        const session = window.adminPanel.createNewSession(label);
+        state.activeSessionId = session.id;
+      }
+
       updateVisibleDomains();
       state.screen = 'questions';
       state.activeDomainIdx = 0;
-      saveData(); // Persist department selection to session
+      saveData();
       render();
     },
 
@@ -835,6 +871,20 @@
     exportCsv: handleExportCsv,
     exportJsonDashboard: handleExportJson,
     closeDashboard: handleCloseDashboard,
+
+    resumeSession: function(sessionId) {
+      state.readOnly = false;
+      state.screen = 'welcome';
+      state.activeDomainIdx = 0;
+      state.selectedDept = null;
+      state.answers = {};
+      loadSavedData(sessionId);
+      // If the session had a department, go straight to questions
+      if (state.selectedDept) {
+        state.screen = 'questions';
+      }
+      render();
+    },
 
     loadSession: function(sessionId) {
       state.readOnly = false;
@@ -881,18 +931,12 @@
       return;
     }
 
-    // Migrate legacy data to sessions if needed
+    // Auto-load most recent session if one exists
     if (window.adminPanel) {
-      window.adminPanel.migrateIfNeeded();
-      // Auto-load most recent session if one exists
       const sessions = window.adminPanel.getSessionsIndex();
       if (sessions.length > 0) {
         loadSavedData(sessions[0].id);
-      } else {
-        loadSavedData();
       }
-    } else {
-      loadSavedData();
     }
 
     // Initialize SyncManager

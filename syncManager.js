@@ -790,6 +790,9 @@ window.SyncManager = (function() {
         input.focus();
       }
     },
+    getRoomCode: function() {
+      return roomCode || null;
+    },
     stopSync: function() {
       stopSync();
     },

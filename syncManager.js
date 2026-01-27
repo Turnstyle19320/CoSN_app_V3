@@ -11,6 +11,7 @@ window.SyncManager = (function() {
   // Callbacks
   let onDataReceived = null;
   let onSessionUpdate = null;
+  let onLockChanged = null;
   let addToast = null;
 
   // --- Reconnection state ---
@@ -236,6 +237,9 @@ window.SyncManager = (function() {
         } else {
           if ((data.type === 'FULL_SYNC' || data.type === 'UPDATE') && onDataReceived) {
             onDataReceived(data.payload);
+          }
+          if (data.type === 'LOCK' && onLockChanged) {
+            onLockChanged(data.locked);
           }
         }
       } catch (err) {
@@ -588,6 +592,14 @@ window.SyncManager = (function() {
     }
   }
 
+  function broadcastLock(locked) {
+    if (mode === 'host' && connections.length > 0) {
+      connections.forEach(conn => {
+        safeSend(conn, { type: 'LOCK', locked: !!locked });
+      });
+    }
+  }
+
   function setCurrentData(data) {
     currentData = data;
   }
@@ -714,6 +726,7 @@ window.SyncManager = (function() {
       if (callbacks) {
         onDataReceived = callbacks.onDataReceived;
         onSessionUpdate = callbacks.onSessionUpdate;
+        onLockChanged = callbacks.onLockChanged;
         addToast = callbacks.addToast;
         onDashboardOpen = callbacks.onOpenDashboard;
       }
@@ -752,6 +765,7 @@ window.SyncManager = (function() {
       stopSync();
     },
     sendUpdate,
+    broadcastLock,
     setCurrentData,
     getState,
     _addToast: function(msg, type) {

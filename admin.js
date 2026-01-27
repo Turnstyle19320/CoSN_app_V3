@@ -425,7 +425,8 @@
                 <div class="px-5 pb-5 space-y-3">
                   ${d.sections.map(s => `
                     <div class="bg-slate-50 rounded-xl p-4">
-                      <h4 class="text-xs font-black text-teal-600 uppercase tracking-widest mb-3">${escapeHtml(s.title)}</h4>
+                      <h4 class="text-xs font-black text-teal-600 uppercase tracking-widest mb-1">${escapeHtml(s.id)} ${escapeHtml(s.title)}</h4>
+                      ${s.description ? `<p class="text-[11px] text-slate-400 italic mb-3">${escapeHtml(s.description)}</p>` : ''}
                       <div class="space-y-2">
                         ${s.subdomains.map(sub => {
                           const level = answers[sub.id] || 'Not Started';
@@ -437,7 +438,7 @@
                           return `
                             <div class="flex items-start justify-between gap-4 py-2 border-b border-slate-200 last:border-0">
                               <div class="flex-1 min-w-0">
-                                <div class="text-sm text-slate-700 font-medium">${escapeHtml(sub.title)}</div>
+                                <div class="text-sm text-slate-700 font-medium"><span class="font-black text-teal-600">${escapeHtml(sub.id)}</span> ${escapeHtml(sub.title)}</div>
                                 ${note ? `<div class="text-xs text-slate-500 mt-1 italic">${escapeHtml(note)}</div>` : ''}
                               </div>
                               <span class="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${badgeClass}">
@@ -613,6 +614,11 @@
       const activeId = window.app && window.app.getActiveSessionId ? window.app.getActiveSessionId() : null;
       if (activeId === id && window.app && window.app.setReadOnly) {
         window.app.setReadOnly(session.locked);
+      }
+
+      // Broadcast lock status to all connected peers
+      if (window.SyncManager && window.SyncManager.broadcastLock) {
+        window.SyncManager.broadcastLock(session.locked);
       }
 
       render();

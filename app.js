@@ -420,15 +420,18 @@
         </div>
         ${currentDomain.sections.map(section => `
           <div class="space-y-6">
-            <h3 class="text-sm font-black text-teal uppercase tracking-widest flex items-center">
-              <span class="w-6 h-1 bg-teal mr-3 rounded-full"></span>
-              ${escapeHtml(section.title)}
-            </h3>
+            <div class="mb-2">
+              <h3 class="text-sm font-black text-teal uppercase tracking-widest flex items-center">
+                <span class="w-6 h-1 bg-teal mr-3 rounded-full"></span>
+                ${escapeHtml(section.id)} ${escapeHtml(section.title)}
+              </h3>
+              ${section.description ? `<p class="text-xs text-slate-400 italic mt-1 ml-9">${escapeHtml(section.description)}</p>` : ''}
+            </div>
             <div class="grid grid-cols-1 gap-8">
               ${section.subdomains.map(sub => `
                 <div class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 space-y-6 relative overflow-hidden group">
                   <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-100 group-hover:bg-teal transition-colors"></div>
-                  <h4 class="text-2xl font-bold text-navy">${escapeHtml(sub.title)}</h4>
+                  <h4 class="text-2xl font-bold text-navy"><span class="text-teal font-black">${escapeHtml(sub.id)}</span> ${escapeHtml(sub.title)}</h4>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     ${['Emerging', 'Developing', 'Mature'].map(level => {
                       const isSelected = state.answers[sub.id] === level;
@@ -955,6 +958,15 @@
       window.SyncManager.init('sync-manager-container', {
         onDataReceived: handleRemoteData,
         onSessionUpdate: handleSessionUpdate,
+        onLockChanged: function(locked) {
+          state.readOnly = !!locked;
+          if (locked) {
+            addToast('This session has been locked by the administrator. Selections are now read-only.', 'info');
+          } else {
+            addToast('This session has been unlocked. You can now make selections.', 'success');
+          }
+          render();
+        },
         addToast: addToast,
         onOpenDashboard: handleOpenDashboard
       });

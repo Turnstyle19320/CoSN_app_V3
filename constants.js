@@ -8,6 +8,7 @@ const DOMAINS = [
       {
         id: "1.1",
         title: "Strategy",
+        description: "Concentrates on aligning Gen AI initiatives with the district's overall mission and objectives, ensuring robust infrastructure, effective cross-functional team collaboration, strategic planning, and performance evaluation.",
         subdomains: [
           {
             id: "1.1.1",
@@ -59,6 +60,7 @@ const DOMAINS = [
       {
         id: "1.2",
         title: "Legislation and Administrative Rules",
+        description: "Focuses on ensuring compliance with legal and regulatory frameworks, integrating Gen AI into educational policies, and keeping the board educated and involved.",
         subdomains: [
           {
             id: "1.2.1",
@@ -92,6 +94,7 @@ const DOMAINS = [
       {
         id: "1.3",
         title: "Use Policy",
+        description: "Concentrates on creating, implementing, and communicating policies for Gen AI use, with a focus on acceptable usage, stakeholder input, and ensuring equitable access.",
         subdomains: [
           {
             id: "1.3.1",
@@ -143,6 +146,7 @@ const DOMAINS = [
       {
         id: "1.4",
         title: "Equity",
+        description: "Focuses on ensuring equitable access to Gen AI tools, addressing digital divide issues, incorporating diverse perspectives, and regularly evaluating the impact of AI on equity.",
         subdomains: [
           {
             id: "1.4.1",
@@ -200,6 +204,7 @@ const DOMAINS = [
       {
         id: "2.1",
         title: "Procurement",
+        description: "Focuses on the ethical, compliant, and strategic acquisition of Gen AI tools, ensuring that they align with educational objectives, legal standards, and data privacy requirements.",
         subdomains: [
           {
             id: "2.1.1",
@@ -269,6 +274,7 @@ const DOMAINS = [
       {
         id: "2.2",
         title: "Staffing",
+        description: "Concentrates on preparing the workforce for Gen AI integration through continuous professional development, change management, skills assessment, job role adaptation, financial planning, and data management skills.",
         subdomains: [
           {
             id: "2.2.1",
@@ -335,6 +341,7 @@ const DOMAINS = [
       {
         id: "3.1",
         title: "Data Governance",
+        description: "Focuses on establishing and maintaining robust data governance frameworks, including stewardship, compliance, classification, lifecycle management, and literacy programs.",
         subdomains: [
           {
             id: "3.1.1",
@@ -395,6 +402,7 @@ const DOMAINS = [
       {
         id: "3.2",
         title: "Data Quality",
+        description: "Concentrates on ensuring the quality and reliability of data through auditing, versioning, machine-readability, standardization, and integrity programs.",
         subdomains: [
           {
             id: "3.2.1",
@@ -446,6 +454,7 @@ const DOMAINS = [
       {
         id: "3.3",
         title: "Data Privacy",
+        description: "Focuses on protecting data privacy through vendor vetting, policy updates, third-party auditing, privacy by design, and impact assessments.",
         subdomains: [
           {
             id: "3.3.1",
@@ -503,6 +512,7 @@ const DOMAINS = [
       {
         id: "4.1",
         title: "Identity and Access Management",
+        description: "Concentrates on managing user access to Gen AI systems through role-based controls, authentication integration, continuous evaluation, and adaptation to emerging technologies.",
         subdomains: [
           {
             id: "4.1.1",
@@ -545,6 +555,7 @@ const DOMAINS = [
       {
         id: "4.2",
         title: "Tracking & Monitoring",
+        description: "Focuses on monitoring Gen AI system usage, identifying non-compliance, automating compliance monitoring, and implementing usage analytics.",
         subdomains: [
           {
             id: "4.2.1",
@@ -587,6 +598,7 @@ const DOMAINS = [
       {
         id: "4.3",
         title: "Technical Controls",
+        description: "Concentrates on evaluating infrastructure, implementing and reviewing technical controls, assessing interoperability, and addressing sustainability.",
         subdomains: [
           {
             id: "4.3.1",
@@ -629,6 +641,7 @@ const DOMAINS = [
       {
         id: "4.4",
         title: "Hallucinations of Inappropriate Content",
+        description: "Focuses on establishing content moderation systems, requiring vendor guardrails, creating feedback and reporting mechanisms, and engaging the community.",
         subdomains: [
           {
             id: "4.4.1",
@@ -677,6 +690,7 @@ const DOMAINS = [
       {
         id: "5.1",
         title: "Security Safeguards",
+        description: "Concentrates on establishing cybersecurity leadership, implementing Gen AI-specific security protections, developing incident response plans, and conducting regular security audits.",
         subdomains: [
           {
             id: "5.1.1",
@@ -719,6 +733,7 @@ const DOMAINS = [
       {
         id: "5.2",
         title: "Cybersecurity Training",
+        description: "Focuses on providing role-based cybersecurity education, developing training programs, establishing continuous learning frameworks, and raising community awareness.",
         subdomains: [
           {
             id: "5.2.1",
@@ -767,6 +782,7 @@ const DOMAINS = [
       {
         id: "6.1",
         title: "Legal Remediation",
+        description: "Focuses on ensuring contractual compliance, enforcing policy violation consequences, developing remediation plans, educating on copyright, providing continuous legal education, and communicating with stakeholders.",
         subdomains: [
           {
             id: "6.1.1",
@@ -827,6 +843,7 @@ const DOMAINS = [
       {
         id: "6.2",
         title: "Risk Management",
+        description: "Concentrates on integrating Gen AI into audit processes, managing data retention agreements, securing insurance coverage, developing risk assessment frameworks, and reviewing insurance policies.",
         subdomains: [
           {
             id: "6.2.1",
@@ -878,6 +895,7 @@ const DOMAINS = [
       {
         id: "6.3",
         title: "Loss Notification",
+        description: "Focuses on establishing data loss notification policies, monitoring compliance, integrating protocols into training, implementing automated alert systems, and engaging the community.",
         subdomains: [
           {
             id: "6.3.1",
@@ -935,6 +953,7 @@ const DOMAINS = [
       {
         id: "7.1",
         title: "AI Curriculum Integration",
+        description: "Focuses on establishing foundational AI understanding across all grade levels, integrating AI learning into various subject areas, and continuously updating the curriculum.",
         subdomains: [
           {
             id: "7.1.1",
@@ -968,6 +987,7 @@ const DOMAINS = [
       {
         id: "7.2",
         title: "Teacher Professional Development in AI",
+        description: "Concentrates on providing comprehensive training programs, ensuring resource access, and building collaborative educator communities for AI education.",
         subdomains: [
           {
             id: "7.2.1",
@@ -1001,6 +1021,7 @@ const DOMAINS = [
       {
         id: "7.3",
         title: "Ethical AI Use and Policy/Guidance Development",
+        description: "Focuses on developing comprehensive policy frameworks, providing ethical training, and engaging stakeholders in AI governance.",
         subdomains: [
           {
             id: "7.3.1",
@@ -1034,6 +1055,7 @@ const DOMAINS = [
       {
         id: "7.4",
         title: "Evaluating AI Impact",
+        description: "Concentrates on conducting effectiveness studies, establishing feedback mechanisms, and implementing adaptation and improvement processes.",
         subdomains: [
           {
             id: "7.4.1",
@@ -1067,6 +1089,7 @@ const DOMAINS = [
       {
         id: "7.5",
         title: "AI Accessibility and Equity",
+        description: "Focuses on improving technological infrastructure, implementing inclusivity measures, and monitoring for equitable access to AI tools.",
         subdomains: [
           {
             id: "7.5.1",
@@ -1100,6 +1123,7 @@ const DOMAINS = [
       {
         id: "7.6",
         title: "Operational Automation",
+        description: "Concentrates on automating routine administrative tasks, managing and analyzing data effectively, and integrating AI into strategic planning processes.",
         subdomains: [
           {
             id: "7.6.1",

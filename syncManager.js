@@ -707,7 +707,7 @@ window.SyncManager = (function() {
               </button>
 
               <button
-                onclick="window.SyncManager.stopSync()"
+                onclick="window.app && window.app.leaveSession ? window.app.leaveSession() : window.SyncManager.stopSync()"
                 class="w-full mt-3 bg-red-50 text-red-600 py-2.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-all border border-red-100"
               >
                 Disconnect Session

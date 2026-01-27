@@ -74,16 +74,21 @@
 
   // Save data to active session
   function saveData() {
-    if (state.activeSessionId && window.adminPanel) {
-      window.adminPanel.updateSession(
-        state.activeSessionId,
-        state.answers,
-        state.selectedDept ? state.selectedDept.id : null
-      );
-      // Keep SyncManager's currentData in sync
-      if (window.SyncManager) {
-        window.SyncManager.setCurrentData(state.answers);
-      }
+    if (!state.activeSessionId || !window.adminPanel) return;
+
+    // Never persist to localStorage when we're a client in a collab session —
+    // the host owns the data; we only hold it in memory.
+    const syncState = window.SyncManager ? window.SyncManager.getState() : {};
+    if (syncState.mode === 'client') return;
+
+    window.adminPanel.updateSession(
+      state.activeSessionId,
+      state.answers,
+      state.selectedDept ? state.selectedDept.id : null
+    );
+    // Keep SyncManager's currentData in sync
+    if (window.SyncManager) {
+      window.SyncManager.setCurrentData(state.answers);
     }
   }
 
@@ -949,8 +954,11 @@
       const dept = DEPARTMENTS.find(d => d.id === deptId);
       state.selectedDept = dept;
 
-      // Ensure the single local session exists and is active (if not in a collab session)
-      if (!state.activeSessionId) {
+      // Ensure the single local session exists and is active —
+      // but ONLY if we're not currently in a collab sync session (client mode).
+      // In client mode, data belongs to the host, not our local storage.
+      const syncState = window.SyncManager ? window.SyncManager.getState() : {};
+      if (!state.activeSessionId && syncState.mode !== 'client') {
         ensureLocalSession();
         state.activeSessionId = LOCAL_SESSION_ID;
       }

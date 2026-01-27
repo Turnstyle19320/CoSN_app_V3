@@ -356,18 +356,16 @@
     return `
       <div class="flex-1 space-y-8 animate-fade-in">
         <div>
-          <h2 class="text-3xl font-bold text-navy">Identify Your Lens</h2>
-          <p class="text-slate-500">Select your department to focus on relevant maturity domains.</p>
+          <h2 class="text-3xl font-bold text-navy">Select Your Group</h2>
+          <p class="text-slate-500">Find your name and select your assigned domain.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           ${DEPARTMENTS.map(dept => `
             <button onclick="app.selectDept('${dept.id}')" class="bg-white p-6 rounded-2xl border-2 border-slate-100 hover:border-teal text-left transition-all hover:shadow-xl group relative overflow-hidden">
               <div class="absolute top-0 right-0 w-24 h-24 bg-teal/5 rounded-full -mr-8 -mt-8 group-hover:bg-teal/10 transition-colors"></div>
-              <h3 class="text-xl font-bold text-navy group-hover:text-teal mb-2 z-10 relative">${escapeHtml(dept.name)}</h3>
-              <p class="text-sm text-slate-400 z-10 relative">${escapeHtml(dept.description)}</p>
-              <div class="mt-4 flex gap-1 z-10 relative">
-                ${dept.domainIds.map(() => '<span class="w-1.5 h-1.5 rounded-full bg-teal/30"></span>').join('')}
-              </div>
+              <h3 class="text-xl font-bold text-navy group-hover:text-teal mb-1 z-10 relative">${escapeHtml(dept.name)}</h3>
+              ${dept.members ? `<p class="text-sm font-semibold text-teal z-10 relative">${escapeHtml(dept.members)}</p>` : ''}
+              <p class="text-sm text-slate-400 z-10 relative mt-1">${escapeHtml(dept.description)}</p>
             </button>
           `).join('')}
         </div>

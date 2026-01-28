@@ -180,6 +180,7 @@
 
     // Targeted patch — only update the changed card, never full re-render
     patchAnswers(new Set([subdomainId]));
+    patchProgressAndDashboard();
   }
 
   function handleNoteUpdate(subdomainId, value) {
@@ -192,6 +193,23 @@
     window.dispatchEvent(new CustomEvent('assessment-update', {
       detail: state.answers
     }));
+
+    if (state.showDashboard) {
+      renderSessionDashboard();
+    }
+  }
+
+  // Lightweight update for progress bar + dashboard without full re-render
+  function patchProgressAndDashboard() {
+    const progress = calculateProgress();
+    const progressBar = document.querySelector('[data-progress-bar]');
+    const progressLabel = document.querySelector('[data-progress-label]');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (progressLabel) progressLabel.textContent = progress + '% Domain Complete';
+
+    if (state.showDashboard) {
+      renderSessionDashboard();
+    }
   }
 
   function handleRemoteData(remoteData, isFullSync) {
@@ -225,10 +243,9 @@
       state.lastUpdatedAt = new Date();
       saveData();
 
-      // Patch only the visible cards that changed — no full re-render.
-      // If the changed subdomains aren't on the current screen/domain,
-      // that's fine — state.answers is updated and will render when navigated to.
+      // Patch visible cards without a full page re-render
       patchAnswers(changedIds);
+      patchProgressAndDashboard();
     } catch (err) {
       console.error('[App] Error processing remote data:', err);
     }

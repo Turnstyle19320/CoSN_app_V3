@@ -78,8 +78,9 @@ window.SyncManager = (function() {
   function isValidPayload(data) {
     if (!data || typeof data !== 'object') return false;
     if (typeof data.type !== 'string') return false;
-    if (!['UPDATE', 'FULL_SYNC', 'HEARTBEAT', 'HEARTBEAT_ACK'].includes(data.type)) return false;
+    if (!['UPDATE', 'FULL_SYNC', 'HEARTBEAT', 'HEARTBEAT_ACK', 'LOCK'].includes(data.type)) return false;
     if (data.type === 'HEARTBEAT' || data.type === 'HEARTBEAT_ACK') return true;
+    if (data.type === 'LOCK') return true;
     if (data.payload === undefined || data.payload === null) return false;
     if (typeof data.payload !== 'object') return false;
     return true;

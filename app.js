@@ -793,6 +793,20 @@
           grid.innerHTML = renderSubdomainCard(sub);
           patched = true;
         }
+        // Update the note textarea (only if it's not currently focused, to avoid disrupting typing)
+        const textarea = cardEl.querySelector('textarea');
+        if (textarea && document.activeElement !== textarea) {
+          const noteVal = state.answers['notes:' + sub.id] || '';
+          if (textarea.value !== noteVal) {
+            textarea.value = noteVal;
+            // Update the character count label
+            const label = cardEl.querySelector('label');
+            if (label) {
+              const countSpan = label.querySelector('span');
+              if (countSpan) countSpan.textContent = `(${noteVal.length}/300)`;
+            }
+          }
+        }
       }
     }
 

@@ -465,8 +465,19 @@
     const isFirst = state.activeDomainIdx === 0;
     const isLast = state.activeDomainIdx === state.visibleDomains.length - 1;
 
+    const lockedBanner = state.readOnly ? `
+      <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl px-6 py-4 flex items-center gap-3">
+        <svg class="w-6 h-6 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <div>
+          <p class="text-sm font-black text-amber-800">Session Locked</p>
+          <p class="text-xs text-amber-600">This session has been locked by the administrator. All selections are read-only.</p>
+        </div>
+      </div>
+    ` : '';
+
     return `
       <div class="flex-1 space-y-10 animate-fade-in">
+        ${lockedBanner}
         <div class="flex items-center justify-between border-b border-slate-200 pb-6">
           <div>
             <button onclick="app.goToScreen('dept')" class="text-sm text-slate-400 hover:text-teal font-bold flex items-center gap-1 mb-3 transition-colors">
@@ -497,11 +508,12 @@
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     ${['Emerging', 'Developing', 'Mature'].map(level => {
                       const isSelected = state.answers[sub.id] === level;
+                      const ro = state.readOnly;
                       const borderClass = isSelected
                         ? (level === 'Emerging' ? 'border-red-500 bg-red-50/50'
                           : level === 'Developing' ? 'border-amber-500 bg-amber-50/50'
                           : 'border-teal bg-teal-light/50')
-                        : 'border-slate-50 hover:border-slate-200 bg-slate-50/30';
+                        : ro ? 'border-slate-100 bg-slate-50/20' : 'border-slate-50 hover:border-slate-200 bg-slate-50/30';
                       const radioClass = isSelected
                         ? (level === 'Emerging' ? 'bg-red-500 border-red-200'
                           : level === 'Developing' ? 'bg-amber-500 border-amber-200'
@@ -509,9 +521,10 @@
                         : 'bg-transparent border-slate-200';
                       const labelClass = isSelected ? 'text-navy' : 'text-slate-400';
                       const textClass = isSelected ? 'text-slate-700 font-medium' : 'text-slate-500';
+                      const disabledClass = ro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer';
 
                       return `
-                        <button onclick="app.selectMaturity('${sub.id}', '${level}')" class="p-6 rounded-2xl border-2 text-left transition-all relative ${borderClass}">
+                        <button ${ro ? 'disabled' : ''} onclick="app.selectMaturity('${sub.id}', '${level}')" class="p-6 rounded-2xl border-2 text-left transition-all relative ${borderClass} ${disabledClass}">
                           <div class="flex items-center mb-3">
                             <div class="w-4 h-4 rounded-full mr-2 border-2 ${radioClass}"></div>
                             <span class="text-[10px] font-black uppercase tracking-widest ${labelClass}">${level}</span>
@@ -526,8 +539,9 @@
                     <textarea
                       maxlength="300"
                       placeholder="Add optional notes for this subdomain..."
-                      class="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 placeholder-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none transition-colors"
+                      class="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 placeholder-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none transition-colors ${state.readOnly ? 'bg-slate-50 cursor-not-allowed' : ''}"
                       rows="2"
+                      ${state.readOnly ? 'disabled' : ''}
                       oninput="app.updateNote('${sub.id}', this.value)"
                     >${escapeHtml(state.answers['notes:' + sub.id] || '')}</textarea>
                   </div>
@@ -716,14 +730,14 @@
   }
 
   function renderSubdomainCard(sub) {
-    const isSelected = (level) => state.answers[sub.id] === level;
+    const ro = state.readOnly;
     return ['Emerging', 'Developing', 'Mature'].map(level => {
-      const selected = isSelected(level);
+      const selected = state.answers[sub.id] === level;
       const borderClass = selected
         ? (level === 'Emerging' ? 'border-red-500 bg-red-50/50'
           : level === 'Developing' ? 'border-amber-500 bg-amber-50/50'
           : 'border-teal bg-teal-light/50')
-        : 'border-slate-50 hover:border-slate-200 bg-slate-50/30';
+        : ro ? 'border-slate-100 bg-slate-50/20' : 'border-slate-50 hover:border-slate-200 bg-slate-50/30';
       const radioClass = selected
         ? (level === 'Emerging' ? 'bg-red-500 border-red-200'
           : level === 'Developing' ? 'bg-amber-500 border-amber-200'
@@ -731,8 +745,9 @@
         : 'bg-transparent border-slate-200';
       const labelClass = selected ? 'text-navy' : 'text-slate-400';
       const textClass = selected ? 'text-slate-700 font-medium' : 'text-slate-500';
+      const disabledClass = ro ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer';
       return `
-        <button onclick="app.selectMaturity('${sub.id}', '${level}')" class="p-6 rounded-2xl border-2 text-left transition-all relative ${borderClass}">
+        <button ${ro ? 'disabled' : ''} onclick="app.selectMaturity('${sub.id}', '${level}')" class="p-6 rounded-2xl border-2 text-left transition-all relative ${borderClass} ${disabledClass}">
           <div class="flex items-center mb-3">
             <div class="w-4 h-4 rounded-full mr-2 border-2 ${radioClass}"></div>
             <span class="text-[10px] font-black uppercase tracking-widest ${labelClass}">${level}</span>

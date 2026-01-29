@@ -1161,7 +1161,7 @@ const DOMAINS = [
 const DEPARTMENTS = [
   { id: 'exec-leadership', name: 'Executive Leadership', description: 'Domain 1 — Executive Leadership Readiness', domainIds: [1], members: 'Jason & Jen' },
   { id: 'operational', name: 'Operational Readiness', description: 'Domain 2 — Operational Readiness', domainIds: [2], members: 'Mike & Susan' },
-  { id: 'data', name: 'Data Readiness', description: 'Domain 3 — Data Readiness', domainIds: [3], members: 'Jim & Jamey' },
+  { id: 'data', name: 'Data Readiness', description: 'Domain 3 — Data Readiness', domainIds: [3], members: 'Jim & Jamie' },
   { id: 'technical', name: 'Technical Readiness', description: 'Domain 4 — Technical Readiness', domainIds: [4], members: '' },
   { id: 'security', name: 'Security Readiness', description: 'Domain 5 — Security Readiness', domainIds: [5], members: '' },
   { id: 'legal-risk', name: 'Legal/Risk Readiness', description: 'Domain 6 — Legal/Risk Readiness', domainIds: [6], members: 'Micki & Becky' },

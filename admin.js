@@ -193,6 +193,54 @@
     downloadFile(JSON.stringify(rows, null, 2), `${sanitizeFilename(session.label)}-${new Date().toISOString().slice(0,10)}.json`, 'application/json;charset=utf-8;');
   }
 
+  function exportSessionBackup(session) {
+    const backup = {
+      _type: 'cosn_session_backup',
+      _version: 1,
+      label: session.label,
+      department: session.department,
+      answers: session.answers || {},
+      completionPercent: session.completionPercent,
+      createdAt: session.createdAt,
+      exportedAt: new Date().toISOString()
+    };
+    downloadFile(JSON.stringify(backup, null, 2), `${sanitizeFilename(session.label)}-backup-${new Date().toISOString().slice(0,10)}.json`, 'application/json;charset=utf-8;');
+  }
+
+  function importSessionFromFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (!data._type || data._type !== 'cosn_session_backup') {
+            alert('Invalid file. Please select a session backup file exported from this tool.');
+            return;
+          }
+          const label = prompt('Name for the imported session:', data.label || 'Imported Session');
+          if (label === null) return;
+          const session = createNewSession(label);
+          session.answers = data.answers || {};
+          session.department = data.department || null;
+          session.completionPercent = calculateCompletionPercent(session.answers);
+          session.lastModified = new Date().toISOString();
+          saveSession(session);
+          render();
+        } catch (err) {
+          alert('Failed to read file. Make sure it is a valid session backup JSON.');
+          console.error('[Admin] Import failed:', err);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   function downloadFile(content, filename, type) {
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
@@ -276,6 +324,10 @@
             <p class="text-slate-500 text-sm">Create, resume, review, and export assessment sessions.</p>
           </div>
           <div class="flex gap-3">
+            <button onclick="window.adminPanel.importSession()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              Import Session
+            </button>
             <button onclick="window.adminPanel.newSession()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
               New Session
@@ -341,6 +393,9 @@
                             </button>
                             <button onclick="window.adminPanel.reviewSession('${s.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Review">
                               Review
+                            </button>
+                            <button onclick="window.adminPanel.exportBackup('${s.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Export transferable backup">
+                              Backup
                             </button>
                             <button onclick="window.adminPanel.exportCsv('${s.id}')" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors" title="Export CSV">
                               CSV
@@ -582,6 +637,14 @@
       if (!session) return;
       exportSessionJson(session);
     },
+
+    exportBackup: function(id) {
+      const session = getSession(id);
+      if (!session) return;
+      exportSessionBackup(session);
+    },
+
+    importSession: importSessionFromFile,
 
     deleteSession: function(id) {
       const index = getSessionsIndex();
